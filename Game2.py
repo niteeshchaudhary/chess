@@ -1,4 +1,4 @@
-
+import tkinter as tk
 class Game2:
     def __init__(self):
         self.dcolor = ['white', 'black']

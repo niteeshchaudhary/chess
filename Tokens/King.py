@@ -76,8 +76,10 @@ class King(Tokens):
         return [False, None]
 
     def checkOp(self, board, spos,last_move):
+        print(board)
         for i in board:
             for j in i:
+                print(j)
                 if j and j.color!=self.color:
                     if type(j) == type(self):
                         pos = j.possibPositions()
@@ -127,17 +129,18 @@ class King(Tokens):
             for x, y in positions:
                 if board[y][x] and board[y][x].color == self.color:
                     positions[positions.index((x, y))] = '-'
-            if self.moved == 0 and board[self.y][7] and not board[self.y][6] \
-                    and not board[self.y][5] and board[self.y][7].moved == 0:
+            if self.moved == 0 and board[self.y][7] and (not board[self.y][4] and not board[self.y][6] \
+                    and not board[self.y][5]) and board[self.y][7].moved == 0:
                 positions.append((6, self.y))
-            if self.moved == 0 and board[self.y][0] and not board[self.y][1] and not board[self.y][2] \
-                    and not board[self.y][3] and board[self.y][0].moved == 0:
+            if self.moved == 0 and board[self.y][0] and (not board[self.y][1] and not board[self.y][2] \
+                    and not board[self.y][3]) and board[self.y][0].moved == 0:
                 positions.append((2, self.y))
             return filter(lambda l: l != '-', self.checkOp(board, positions,last_move))
         else:
             return []
 
     def setPosition(self, pos):
+        self.moved=1
         self.x, self.y = pos
 
     def getPosition(self):

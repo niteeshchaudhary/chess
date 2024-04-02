@@ -10,4 +10,8 @@ class GameState:
         check=ck
         check_mate=ckm
         last_move=lm
+        
+    def is_check_resolved(point):
+        print("***",point) 
+            
     

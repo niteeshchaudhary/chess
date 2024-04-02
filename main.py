@@ -7,7 +7,10 @@ from Tokens.Queen import Queen
 from Tokens.Pawn import Pawn
 from Block import Block
 from Tokens.GameState import GameState
+import time
 
+
+history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
 class Game:
 
@@ -219,6 +222,7 @@ class Game:
             self.buttons[i][j].setColor("orchid1")
             self.end_box=str(j)+str(i)
             self.last_move=self.start_box+"-"+self.end_box
+            history.write(self.last_move+"\n")
             self.buttons[par[0]][par[1]].setColor("purple")
             self.board[par[0]][par[1]].setPosition((j, i))
             self.board[i][j] = self.board[par[0]][par[1]]
@@ -231,6 +235,7 @@ class Game:
             #self.printBoard()
         else:
             self.clearb()
+            print("->",self.board[i][j])
             if self.board[i][j]:
                 self.start_box=self.board[i][j].icon+str(j)+str(i)
                 pmoves = self.board[i][j].possibPositionsbyB(self.board,self.last_move)
