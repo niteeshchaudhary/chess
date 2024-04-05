@@ -50,15 +50,13 @@ class Bishop:
                 current_row += offset[0]
                 current_col += offset[1]
 
-        if is_check:
-            valid_moves = []
-            king_position = game.find_king_position(self.color)
-            for move in possible_moves:
-                backup_board = [row[:] for row in board]
-                game.make_move_on_board(position, move, backup_board)
-                if not game.is_king_under_attack(king_position, backup_board):
-                    valid_moves.append(move)
 
-            return valid_moves
-        else:
-            return possible_moves
+        valid_moves = []
+        king_position = game.find_king_position(self.color)
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(king_position, backup_board):
+                valid_moves.append(move)
+
+        return valid_moves

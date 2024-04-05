@@ -42,17 +42,14 @@ class Knight:
                 if board[new_row][new_col] is None or board[new_row][new_col].color != self.color:
                     possible_moves.append((new_row, new_col))
 
-        if is_check:
-            valid_moves = []
-            colorcheck="black" if self.color=="white" else "white"
-            print("Knight : ", self.color)
-            king_position = game.find_king_position(self.color)
-            for move in possible_moves:
-                backup_board = [row[:] for row in board]
-                game.make_move_on_board(position, move, backup_board)
-                if not game.is_king_under_attack(king_position, backup_board):
-                    valid_moves.append(move)
+        valid_moves = []
+        colorcheck="black" if self.color=="white" else "white"
+        # print("Knight : ", self.color)
+        king_position = game.find_king_position(self.color)
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(king_position, backup_board):
+                valid_moves.append(move)
 
-            return valid_moves
-        else:
-            return possible_moves
+        return valid_moves

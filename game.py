@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import simpledialog, messagebox
 from tokens.Rook import Rook
 from tokens.Knight import Knight
 from tokens.Bishop import Bishop
@@ -31,6 +32,34 @@ class Game:
         # Variable to store selected piece position
         self.selected_piece = None
 
+    def choose_piece(self,position):
+        piece=self.board[position[0]][position[1]]
+        # Function to set the selected inp and close the dialog
+        def set_inp(p):
+            inp = p
+            inp = inp.lower()  # Convert input to lowercase for case-insensitive comparison
+            if inp == "rook":
+                self.board[position[0]][position[1]]=Rook(piece.color)
+            elif inp == "bishop":
+                self.board[position[0]][position[1]]=Bishop(piece.color)
+            elif inp == "knight":
+                self.board[position[0]][position[1]]=Knight(piece.color)
+            else:
+                self.board[position[0]][position[1]]=Queen(piece.color)
+
+            self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
+            print("You chose:", inp)
+            dialog.destroy()
+
+        # Create a dialog box
+        dialog = tk.Toplevel(self.master)
+        dialog.title("Choose Chess piece")
+        buttons_text = ["Rook", "Bishop", "Knight",  "Queen"]
+        tk.Button(dialog, text=buttons_text[0],width=10, height=2,  command=lambda: set_inp(buttons_text[0])).pack(padx=5, pady=5)
+        tk.Button(dialog, text=buttons_text[1],width=10, height=2,  command=lambda: set_inp(buttons_text[1])).pack(padx=5, pady=5)
+        tk.Button(dialog, text=buttons_text[2],width=10, height=2,  command=lambda: set_inp(buttons_text[2])).pack(padx=5, pady=5)
+        tk.Button(dialog, text=buttons_text[3],width=10, height=2,  command=lambda: set_inp(buttons_text[3])).pack(padx=5, pady=5)
+        
 
     def setup_board(self):
         board = [[None for _ in range(8)] for _ in range(8)]
@@ -77,45 +106,65 @@ class Game:
 
         if piece:
             if self.selected_piece is None:
-                # Highlight possible moves for the selected piece
-                possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, game=self)
-                self.highlight_possible_moves(possible_moves)
-                self.board_squares[row][col].config(bg="orange")
-                self.selected_piece = (row, col)
+                if piece.color==self.current_player:
+                    # Highlight possible moves for the selected piece
+                    possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, game=self)
+                    self.highlight_possible_moves(possible_moves)
+                    self.board_squares[row][col].config(bg="orange")
+                    self.selected_piece = (row, col)
+                else:
+                    self.clear_highlighting()
+                    self.board_squares[row][col].config(bg="orange")
+                    return
+
             else:
                 # Move the selected piece to the clicked square
-                print( self.selected_piece)
-                piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
-                possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
+                print( "selected: ",self.selected_piece)
+                prev_piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
+                possible_moves=prev_piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
                 if (row, col) in possible_moves:
+                    # moving on oppenents piece
                     print("Move piece")
                     self.clear_highlighting()
                     self.move_piece(self.selected_piece, (row, col))
                     past=self.selected_piece
                     self.selected_piece = None
+                    print("currrr",self.current_player)
                     self.board_squares[past[0]][past[1]].config(bg="purple")
-                    self.board_squares[row][col].config(bg="#FF00FF")
+                    self.board_squares[row][col].config(bg="#FF00FF") 
                 else:
-                    self.selected_piece = None
-                    self.clear_highlighting()
-                    self.selected_piece = (row, col)
-                    piece = self.board[row][col]
-                    possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                    self.highlight_possible_moves(possible_moves)
-                    self.board_squares[row][col].config(bg="orange")
-                    self.selected_piece = (row, col)
+                    print( "choose diff: ",self.selected_piece)
+                    if piece.color==self.current_player:
+                        print( "choose diff:-> ",piece.color,self.current_player)
+                        self.selected_piece = None
+                        self.clear_highlighting()
+                        self.selected_piece = (row, col)
+                        piece = self.board[row][col]
+                        possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
+                        self.highlight_possible_moves(possible_moves)
+                        self.board_squares[row][col].config(bg="orange")
+                        self.selected_piece = (row, col)
+                    else:
+                        self.clear_highlighting()
+                        self.board_squares[row][col].config(bg="orange")
+                        return
+
         else:
             if self.selected_piece:
                 piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
                 possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
                 if (row, col) in possible_moves:
-                    print("Move piece")
+                    # moving in empty space
+                    print("Move piece 000")
                     self.clear_highlighting()
                     self.move_piece(self.selected_piece, (row, col))
                     past=self.selected_piece
                     self.selected_piece = None
                     self.board_squares[past[0]][past[1]].config(bg="purple")
                     self.board_squares[row][col].config(bg="pink")
+                    print("currrr yemp",self.current_player)
+                    # self.board_squares[past[0]][past[1]].config(bg="purple")
+                    # self.board_squares[row][col].config(bg="#FF00FF")
                 else:
                     self.clear_highlighting()
 
@@ -129,6 +178,7 @@ class Game:
 
 
     def update_game_state(self):
+        # self.current_player="black" if self.current_player=="white" else "white"
         # Reset state
         self.is_check = False
         self.is_checkmate = False
@@ -161,7 +211,7 @@ class Game:
     def is_king_under_attack(self, king_position,board=[]):
         opponent_color = "white" if self.current_player == "black" else "black"
         myboard=self.board if board==[] else board
-        print("King : ",opponent_color)
+        # print("King : ",opponent_color)
         for row in range(8):
             for col in range(8):
                 piece = myboard[row][col]
@@ -199,7 +249,7 @@ class Game:
                     #     self.make_move_on_board((row, col), move, backup_board)
                     #     if not self.is_king_under_attack(king_position):
                     if len(possible_moves)>0:
-                        print((row, col), piece,possible_moves)    
+                        # print((row, col), piece,possible_moves)    
                         return False
 
         return True
@@ -222,12 +272,12 @@ class Game:
         # Update GUI
         self.board_squares[end[0]][end[1]].config(text=piece.get_symbol())
         self.board_squares[start[0]][start[1]].config(text="")
-        move=(start, end,'')
+        move=(start, end)
+        self.current_player="black" if self.current_player=="white" else "white"
         self.make_move(move)
         
     def make_move(self, move):
         self.update_game_state()
-        self.en_passant_target=None
 
         if self.is_checkmate:
             print(f"{self.current_player.capitalize()} is in checkmate!")
@@ -237,38 +287,56 @@ class Game:
             
         # Update en passant target
         if isinstance(move, tuple):
-            start_position,position, promotion = move
-            if promotion == "promote":
-                # Promotion logic
-                pass
+            start_position,position = move
+            piece = self.board[position[0]][position[1]]
+            # print("_>",piece)
+            if isinstance(piece, Pawn):
+                # print("...",piece.en_passant_target)
+                # print("...",self.en_passant_target,position)
+                if(self.en_passant_target==position):
+                    self.board[start_position[0]][position[1]]=None
+                    self.board_squares[start_position[0]][position[1]].config(text="")
+                elif position[0] == 0 or position[0] == 7:
+                    self.choose_piece(position)
+
+
+                # if self.en_passant_target and piece.en_passant_target
+                self.en_passant_target = piece.en_passant_target
+                piece.en_passant_target=None
+                
+            elif isinstance(piece, King):
+                self.en_passant_target=None
+                # Update king's has_moved attribute
+                piece.has_moved = True
+
+                # Check for castling move
+                row, col = start_position
+                # print("K",start_position)
+                if position == (row, col + 2):  # Kingside castling
+                    # print("Ks",position)
+                    rook = self.board[row][7]
+                    rook.has_moved = True
+                    self.board[row][5] = rook
+                    self.board[row][7] = None
+                    # Update GUI
+                    self.board_squares[row][5].config(text=rook.get_symbol())
+                    self.board_squares[row][7].config(text="")
+                elif position == (row, col - 2):  # Queenside castling
+                    rook = self.board[row][0]
+                    rook.has_moved = True
+                    self.board[row][3] = rook
+                    self.board[row][0] = None
+                    # Update GUI
+                    self.board_squares[row][3].config(text=rook.get_symbol())
+                    self.board_squares[row][0].config(text="")
+
+            elif isinstance(piece, Rook):
+                self.en_passant_target=None
+                # Update rook's has_moved attribute
+                piece.has_moved = True
             else:
-                piece = self.board[position[0]][position[1]]
-                print("_>",piece)
-                if isinstance(piece, Pawn):
-                    print("...",piece.en_passant_target)
-                    self.en_passant_target = piece.en_passant_target
-                    piece.en_passant_target=None
-                    print("...",self.en_passant_target)
-                elif isinstance(piece, King):
-                    # Update king's has_moved attribute
-                    piece.has_moved = True
+                self.en_passant_target=None
 
-                    # Check for castling move
-                    row, col = start_position
-                    if position == (row, col + 2):  # Kingside castling
-                        rook = self.board[row][7]
-                        rook.has_moved = True
-                        self.board[row][5] = rook
-                        self.board[row][7] = None
-                    elif position == (row, col - 2):  # Queenside castling
-                        rook = self.board[row][0]
-                        rook.has_moved = True
-                        self.board[row][3] = rook
-                        self.board[row][0] = None
-
-                elif isinstance(piece, Rook):
-                    # Update rook's has_moved attribute
-                    piece.has_moved = True
 
         # Check for check and checkmate
         self.update_game_state()

@@ -27,7 +27,7 @@ class Pawn:
                 # and board[capture_row][capture_col] != None
                 # and board[capture_row][capture_col].color != self.color
             ):
-                print(board[capture_row][capture_col])
+                # print(board[capture_row][capture_col])
                 possible_moves.append((capture_row, capture_col))
 
 
@@ -59,37 +59,35 @@ class Pawn:
                 and board[capture_row][capture_col] != None
                 and board[capture_row][capture_col].color != self.color
             ):
-                print(board[capture_row][capture_col])
+                # print(board[capture_row][capture_col])
                 possible_moves.append((capture_row, capture_col))
 
-        print("enpi",game.en_passant_target)
+        # print("enpi",game.en_passant_target)
         # Check for en passant capture
         if game.en_passant_target:
             en_passant_row, en_passant_col = game.en_passant_target
-            print("enpi enter",game.en_passant_target)
+            # print("enpi enter",game.en_passant_target)
             for offset in [-1, 1]:
                 capture_row = row + self.direction
                 capture_col = col + offset
-                print("enpi enter ye ",(capture_row, capture_col),game.en_passant_target)
+                # print("enpi enter ye ",(capture_row, capture_col),game.en_passant_target)
                 if (capture_row, capture_col) == game.en_passant_target:
-                    print("why")
+                    # print("why")
                     possible_moves.append((en_passant_row, capture_col))
 
         # Check for pawn promotion
-        if (self.color == "white" and forward_row == 7) or (self.color == "black" and forward_row == None):
-            possible_moves = [(move, "promote") for move in possible_moves]
+        # if (self.color == "white" and forward_row == 7) or (self.color == "black" and forward_row == 0):
+        #     possible_moves = [(move, "promote") for move in possible_moves]
 
-        print(possible_moves)
-        if is_check:
-            valid_moves = []
-            king_position = game.find_king_position(self.color)
-            for move in possible_moves:
-                backup_board = [row[:] for row in board]
-                game.make_move_on_board(position, move, backup_board)
-                if not game.is_king_under_attack(king_position, backup_board):
-                    print("here is the move ",move)
-                    valid_moves.append(move)
+        # print(possible_moves)
+       
+        valid_moves = []
+        king_position = game.find_king_position(self.color)
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(king_position, backup_board):
+                # print("here is the move ",move)
+                valid_moves.append(move)
 
-            return valid_moves
-        else:
-            return possible_moves
+        return valid_moves
