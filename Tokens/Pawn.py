@@ -9,6 +9,29 @@ class Pawn:
             return "♙"
         else:
             return "♟"
+        
+    def get_possible_moves_op(self, board, position,is_check,game):
+        row, col = position
+        possible_moves = []
+
+        # Check for forward move
+        forward_row = row + self.direction
+
+        # Check for captures
+        for offset in [-1, 1]:
+            capture_row = row + self.direction
+            capture_col = col + offset
+            if (
+                0 <= capture_row < 8
+                and 0 <= capture_col < 8
+                # and board[capture_row][capture_col] != None
+                # and board[capture_row][capture_col].color != self.color
+            ):
+                print(board[capture_row][capture_col])
+                possible_moves.append((capture_row, capture_col))
+
+
+        return possible_moves
 
     def get_possible_moves(self, board, position,is_check,game):
         row, col = position
@@ -64,6 +87,7 @@ class Pawn:
                 backup_board = [row[:] for row in board]
                 game.make_move_on_board(position, move, backup_board)
                 if not game.is_king_under_attack(king_position, backup_board):
+                    print("here is the move ",move)
                     valid_moves.append(move)
 
             return valid_moves

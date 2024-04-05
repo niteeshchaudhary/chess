@@ -71,6 +71,8 @@ class Game:
                     self.board_squares[row][col].config(text=piece_symbol)                   
 
     def on_square_clicked(self, row, col):
+        if self.is_checkmate:
+            return
         piece = self.board[row][col]
 
         if piece:
@@ -82,14 +84,15 @@ class Game:
                 self.selected_piece = (row, col)
             else:
                 # Move the selected piece to the clicked square
+                print( self.selected_piece)
                 piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
                 possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
                 if (row, col) in possible_moves:
                     print("Move piece")
+                    self.clear_highlighting()
                     self.move_piece(self.selected_piece, (row, col))
                     past=self.selected_piece
                     self.selected_piece = None
-                    self.clear_highlighting()
                     self.board_squares[past[0]][past[1]].config(bg="purple")
                     self.board_squares[row][col].config(bg="#FF00FF")
                 else:
@@ -107,10 +110,10 @@ class Game:
                 possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
                 if (row, col) in possible_moves:
                     print("Move piece")
+                    self.clear_highlighting()
                     self.move_piece(self.selected_piece, (row, col))
                     past=self.selected_piece
                     self.selected_piece = None
-                    self.clear_highlighting()
                     self.board_squares[past[0]][past[1]].config(bg="purple")
                     self.board_squares[row][col].config(bg="pink")
                 else:
@@ -131,39 +134,45 @@ class Game:
         self.is_checkmate = False
 
         # Find the king's position
-        king_position = self.find_king_position()
+        king_position = self.find_king_position(self.current_player)
 
         # Check for check
         if self.is_king_under_attack(king_position):
             self.is_check = True
+            self.board_squares[king_position[0]][king_position[1]].config(bg="blue")
 
             # Check for checkmate
-            if self.is_checkmate(king_position):
+            if self.is_checkmate_(king_position):
+                for row in range(8):
+                    for col in range(8):
+                        self.board_squares[row][col].config(state="disable")
                 self.is_checkmate = True
+                self.board_squares[king_position[0]][king_position[1]].config(bg="red")
                 
 
-    def find_king_position(self):
+    def find_king_position(self,color):
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
-                if piece and isinstance(piece, King) and piece.color == self.current_player:
+                if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
 
 
-    def is_king_under_attack(self, king_position):
+    def is_king_under_attack(self, king_position,board=[]):
         opponent_color = "white" if self.current_player == "black" else "black"
-
+        myboard=self.board if board==[] else board
+        print("King : ",opponent_color)
         for row in range(8):
             for col in range(8):
-                piece = self.board[row][col]
-                if piece and piece.color == opponent_color:
-                    possible_moves = piece.get_possible_moves(self.board, (row, col),self.is_check,game=self)
+                piece = myboard[row][col]
+                if piece and piece.color == opponent_color and not isinstance(piece, King):
+                    possible_moves = piece.get_possible_moves_op(myboard, (row, col),self.is_check,game=self)
                     if king_position in possible_moves:
                         return True
 
         return False
 
-    def is_checkmate(self, king_position):
+    def is_checkmate_(self, king_position):
         # Check if the king has any valid moves
         king = self.board[king_position[0]][king_position[1]]
         king_moves = king.get_possible_moves(self.board, king_position,self.is_check,game=self)
@@ -175,8 +184,7 @@ class Game:
             self.make_move_on_board(king_position, move, backup_board)
             if not self.is_king_under_attack(move):
                 valid_moves.append(move)
-            self.board = backup_board
-
+            
         # Check if any other piece can block or capture the attacking piece
         if valid_moves:
             return False
@@ -184,15 +192,15 @@ class Game:
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
-                if piece and piece.color == self.current_player.color:
+                if piece and piece.color == self.current_player:
                     possible_moves = piece.get_possible_moves(self.board, (row, col),self.is_check,game=self)
-                    for move in possible_moves:
-                        backup_board = [row[:] for row in self.board]
-                        self.make_move_on_board((row, col), move, backup_board)
-                        if not self.is_king_under_attack(king_position):
-                            self.board = backup_board
-                            return False
-                        self.board = backup_board
+                    # for move in possible_moves:
+                    #     backup_board = [row[:] for row in self.board]
+                    #     self.make_move_on_board((row, col), move, backup_board)
+                    #     if not self.is_king_under_attack(king_position):
+                    if len(possible_moves)>0:
+                        print((row, col), piece,possible_moves)    
+                        return False
 
         return True
     
@@ -222,14 +230,14 @@ class Game:
         self.en_passant_target=None
 
         if self.is_checkmate:
-            print(f"{self.current_player.color.capitalize()} is in checkmate!")
+            print(f"{self.current_player.capitalize()} is in checkmate!")
             # Handle game over
         elif self.is_check:
-            print(f"{self.current_player.color.capitalize()} king is in check!")
+            print(f"{self.current_player.capitalize()} king is in check!")
             
         # Update en passant target
         if isinstance(move, tuple):
-            _,position, promotion = move
+            start_position,position, promotion = move
             if promotion == "promote":
                 # Promotion logic
                 pass
@@ -246,7 +254,7 @@ class Game:
                     piece.has_moved = True
 
                     # Check for castling move
-                    row, col = piece.row, piece.col
+                    row, col = start_position
                     if position == (row, col + 2):  # Kingside castling
                         rook = self.board[row][7]
                         rook.has_moved = True

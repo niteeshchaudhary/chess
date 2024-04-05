@@ -7,6 +7,29 @@ class Bishop:
             return "♗"
         else:
             return "♝"
+    
+    def get_possible_moves_op(self, board, position,is_check,game):
+        row, col = position
+        possible_moves = []
+
+        # Check diagonals
+        for offset in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            current_row, current_col = row + offset[0], col + offset[1]
+            while 0 <= current_row < 8 and 0 <= current_col < 8:
+                if board[current_row][current_col] is None:
+                    possible_moves.append((current_row, current_col))
+                elif board[current_row][current_col].color != self.color:
+                    possible_moves.append((current_row, current_col))
+                    break  # Can't move further in this direction
+                else:
+                    break  # Can't capture own piece
+
+                current_row += offset[0]
+                current_col += offset[1]
+
+
+        return possible_moves
+        
 
     def get_possible_moves(self, board, position,is_check,game):
         row, col = position

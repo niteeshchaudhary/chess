@@ -1,3 +1,5 @@
+from .Rook import Rook
+
 class King:
     def __init__(self, color):
         self.color = color
@@ -8,6 +10,25 @@ class King:
             return "♔"
         else:
             return "♚"
+        
+    def get_possible_moves_op(self, board, position,is_check,game):
+        row, col = position
+        possible_moves = []
+
+        # Define the eight possible move offsets for a king
+        offsets = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1), (0, 1),
+            (1, -1), (1, 0), (1, 1)
+        ]
+
+        for offset in offsets:
+            new_row, new_col = row + offset[0], col + offset[1]
+            if 0 <= new_row < 8 and 0 <= new_col < 8:
+                if board[new_row][new_col] is None or board[new_row][new_col].color != self.color:
+                    possible_moves.append((new_row, new_col))
+
+        return possible_moves
 
     def get_possible_moves(self, board, position,is_check,game):
         row, col = position
@@ -27,19 +48,20 @@ class King:
                     possible_moves.append((new_row, new_col))
 
         # Check for castling
-        possible_moves.extend(self.get_castling_moves(board, position))
+        if not is_check:
+            possible_moves.extend(self.get_castling_moves(board, position))
+        
+        # self.validate_moves()
 
-        if is_check:
-            valid_moves = []
-            for move in possible_moves:
-                backup_board = [row[:] for row in board]
-                game.make_move_on_board(position, move, backup_board)
-                if not game.is_king_under_attack(move, backup_board):
-                    valid_moves.append(move)
+        valid_moves = []
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(move, backup_board):
+                valid_moves.append(move)
 
-            return valid_moves
-        else:
-            return possible_moves
+        return valid_moves
+
 
     def get_castling_moves(self, board, position):
         castling_moves = []
