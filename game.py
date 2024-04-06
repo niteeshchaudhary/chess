@@ -10,7 +10,7 @@ from tokens.Pawn import Pawn
 class Game:
     def __init__(self, master):
         self.master = master
-        self.master.title("Chess Game")
+        # self.master.title("Chess Game")
         self.current_player="white"
 
         # Board and token instances
@@ -73,6 +73,8 @@ class Game:
         board[6] = [Pawn("black") for _ in range(8)]
 
         return board
+    
+    
 
     def create_board_squares(self):
         squares = []
