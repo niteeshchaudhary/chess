@@ -1,59 +1,99 @@
-from .Tokens import Tokens
+class Rook:
+    def __init__(self, color):
+        self.color = color
+        self.has_moved=False
 
-
-class Rook(Tokens):
-
-    def __init__(self, x, y, color):
-        super().__init__(x, y, color,"rook")
-        self.moved = 0
-        self.icon = "♖" if color == "white" else "♜"
-
-    def possibPositions(self, board):
-        positions = []
-        ob1, ob2, ob3, ob4 = 0, 0, 0, 0
-        for k in range(1, 8):
-            if self.x+k < 8 and ob1 == 0:
-                if board[self.y][self.x+k]:
-                    ob1=1
-                    if board[self.y][self.x+k].color != self.color:
-                        positions.append((self.x+k, self.y))
-                else:
-                    positions.append((self.x + k, self.y))
-            if self.x-k > -1 and ob2 == 0:
-                if board[self.y][self.x - k]:
-                    ob2 = 1
-                    if board[self.y][self.x - k].color != self.color:
-                        positions.append((self.x-k, self.y))
-                else:
-                    positions.append((self.x - k, self.y))
-            if self.y+k < 8 and ob3 == 0:
-                if board[self.y+k][self.x]:
-                    ob3 = 1
-                    if board[self.y+k][self.x].color != self.color:
-                        positions.append((self.x, self.y+k))
-                else:
-                    positions.append((self.x, self.y+k))
-            if self.y-k > -1 and ob4 == 0:
-                if board[self.y-k][self.x]:
-                    ob4 = 1
-                    if board[self.y-k][self.x].color != self.color:
-                        positions.append((self.x, self.y-k))
-                else:
-                    positions.append((self.x, self.y-k))
-        return list(set(positions))
-
-    def possibPositionsbyB(self, board,last_move):
-        if self.isEnable():
-            positions = self.possibPositions(board)
-            for x, y in positions:
-                if board[y][x] and board[y][x].color == self.color:
-                    positions[positions.index((x, y))] = '-'
-            return filter(lambda l: l != '-', positions)
+    def get_symbol(self):
+        if self.color == "white":
+            return "♖"
         else:
-            return []
+            return "♜"
+        
+    def get_possible_moves_op(self, board, position, is_check, game):
+        row, col = position
+        possible_moves = []
 
-    def setPosition(self, pos):
-        self.x, self.y = pos
+        # Check horizontals
+        for c in range(col + 1, 8):
+            if board[row][c] is None:
+                possible_moves.append((row, c))
+            else:
+                if board[row][c].color != self.color:
+                    possible_moves.append((row, c))
+                break
 
-    def getPosition(self):
-        return [self.x, self.y]
+        for c in range(col - 1, -1, -1):
+            if board[row][c] is None:
+                possible_moves.append((row, c))
+            else:
+                if board[row][c].color != self.color:
+                    possible_moves.append((row, c))
+                break
+
+        # Check verticals
+        for r in range(row + 1, 8):
+            if board[r][col] is None:
+                possible_moves.append((r, col))
+            else:
+                if board[r][col].color != self.color:
+                    possible_moves.append((r, col))
+                break
+
+        for r in range(row - 1, -1, -1):
+            if board[r][col] is None:
+                possible_moves.append((r, col))
+            else:
+                if board[r][col].color != self.color:
+                    possible_moves.append((r, col))
+                break
+            
+
+        return possible_moves
+
+    def get_possible_moves(self, board, position, is_check,game):
+        row, col = position
+        possible_moves = []
+
+        # Check horizontals
+        for c in range(col + 1, 8):
+            if board[row][c] is None:
+                possible_moves.append((row, c))
+            else:
+                if board[row][c].color != self.color:
+                    possible_moves.append((row, c))
+                break
+
+        for c in range(col - 1, -1, -1):
+            if board[row][c] is None:
+                possible_moves.append((row, c))
+            else:
+                if board[row][c].color != self.color:
+                    possible_moves.append((row, c))
+                break
+
+        # Check verticals
+        for r in range(row + 1, 8):
+            if board[r][col] is None:
+                possible_moves.append((r, col))
+            else:
+                if board[r][col].color != self.color:
+                    possible_moves.append((r, col))
+                break
+
+        for r in range(row - 1, -1, -1):
+            if board[r][col] is None:
+                possible_moves.append((r, col))
+            else:
+                if board[r][col].color != self.color:
+                    possible_moves.append((r, col))
+                break
+            
+        valid_moves = []
+        king_position = game.find_king_position(self.color)
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(king_position, backup_board):
+                valid_moves.append(move)
+
+        return valid_moves

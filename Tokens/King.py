@@ -1,144 +1,95 @@
-from .Tokens import Tokens
+from .Rook import Rook
 
+class King:
+    def __init__(self, color):
+        self.color = color
+        self.has_moved = False
 
-class King(Tokens):
-
-    def __init__(self, x, y, color):
-        super().__init__(x, y, color,"King")
-        self.moved = 0
-        self.icon = "♔" if color == "white" else "♚"
-
-    def possibPositions(self):
-        positions = []
-        k = 1
-        if self.x+k < 8:
-            positions.append((self.x+k, self.y))
-        if self.x-k > -1:
-            positions.append((self.x-k, self.y))
-        if self.y+k < 8:
-            positions.append((self.x, self.y+k))
-        if self.y-k > -1:
-            positions.append((self.x, self.y-k))
-        if self.x+k < 8 and self.y+k < 8:
-            positions.append((self.x+k, self.y+k))
-        if self.x-k > -1 and self.y-k > -1:
-            positions.append((self.x-k, self.y-k))
-        if self.x+k < 8 and self.y-k > -1:
-            positions.append((self.x+k, self.y-k))
-        if self.x-k > -1 and self.y+k < 8:
-            positions.append((self.x-k, self.y+k))
-
-        return positions
-
-    def calcOp(self, entry, board,last_move):
-        for j in entry:
-            if j and j.color != self.color:
-                if type(j) == type(self):
-                    pos = j.possibPositions()
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.Pawn.Pawn'>":
-                    pos = j.diaPos(board)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.Bishop.Bishop'>":
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.Queen.Queen'>":
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.King.King'>":
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.Knight.Knight'>":
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                elif str(type(j)) == "<class 'Tokens.Rook.Rook'>":
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-                else:
-                    pos = j.possibPositionsbyB(board,last_move)
-                    for p in pos:
-                        if (self.x, self.y) == p:
-                            return [True, j]
-        return [False, None]
-
-    def checkOp(self, board, spos,last_move):
-        for i in board:
-            for j in i:
-                if j and j.color!=self.color:
-                    if type(j) == type(self):
-                        pos = j.possibPositions()
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.Pawn.Pawn'>":
-                        pos = j.diaPos(board)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.Bishop.Bishop'>":
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.Knight.Knight'>":
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.Queen.Queen'>":
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.King.King'>":
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    elif str(type(j)) == "<class 'Tokens.Rook.Rook'>":
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-                    else:
-                        pos = j.possibPositionsbyB(board,last_move)
-                        for p in pos:
-                            if p in spos:
-                                spos[spos.index(p)] = '-'
-        return spos
-
-    def possibPositionsbyB(self, board,last_move):
-        if self.isEnable():
-            positions = self.possibPositions()
-            for x, y in positions:
-                if board[y][x] and board[y][x].color == self.color:
-                    positions[positions.index((x, y))] = '-'
-            if self.moved == 0 and board[self.y][7] and not board[self.y][6] \
-                    and not board[self.y][5] and board[self.y][7].moved == 0:
-                positions.append((6, self.y))
-            if self.moved == 0 and board[self.y][0] and not board[self.y][1] and not board[self.y][2] \
-                    and not board[self.y][3] and board[self.y][0].moved == 0:
-                positions.append((2, self.y))
-            return filter(lambda l: l != '-', self.checkOp(board, positions,last_move))
+    def get_symbol(self):
+        if self.color == "white":
+            return "♔"
         else:
-            return []
+            return "♚"
+        
+    def get_possible_moves_op(self, board, position,is_check,game):
+        row, col = position
+        possible_moves = []
 
-    def setPosition(self, pos):
-        self.x, self.y = pos
+        # Define the eight possible move offsets for a king
+        offsets = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1), (0, 1),
+            (1, -1), (1, 0), (1, 1)
+        ]
 
-    def getPosition(self):
-        return [self.x, self.y]
+        for offset in offsets:
+            new_row, new_col = row + offset[0], col + offset[1]
+            if 0 <= new_row < 8 and 0 <= new_col < 8:
+                if board[new_row][new_col] is None or board[new_row][new_col].color != self.color:
+                    possible_moves.append((new_row, new_col))
+
+        return possible_moves
+
+    def get_possible_moves(self, board, position,is_check,game):
+        row, col = position
+        possible_moves = []
+
+        # Define the eight possible move offsets for a king
+        offsets = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1), (0, 1),
+            (1, -1), (1, 0), (1, 1)
+        ]
+
+        for offset in offsets:
+            new_row, new_col = row + offset[0], col + offset[1]
+            if 0 <= new_row < 8 and 0 <= new_col < 8:
+                if board[new_row][new_col] is None or board[new_row][new_col].color != self.color:
+                    possible_moves.append((new_row, new_col))
+
+        # Check for castling
+        if not is_check:
+            possible_moves.extend(self.get_castling_moves(board, position))
+        
+        # self.validate_moves()
+
+        valid_moves = []
+        for move in possible_moves:
+            backup_board = [row[:] for row in board]
+            game.make_move_on_board(position, move, backup_board)
+            if not game.is_king_under_attack(move, backup_board):
+                valid_moves.append(move)
+
+        return valid_moves
+
+
+    def get_castling_moves(self, board, position):
+        castling_moves = []
+        row, col = position
+
+        # Check for kingside castling
+        if not self.has_moved:
+            rook_col = 7 if self.color == "white" else 7
+            if (
+                board[row][col + 1] is None
+                and board[row][col + 2] is None
+                and board[row][rook_col] is not None
+                and isinstance(board[row][rook_col], Rook)
+                and not board[row][rook_col].has_moved
+            ):
+                castling_moves.append((row, col + 2))
+
+        # Check for queenside castling
+        if not self.has_moved:
+            rook_col = 0 if self.color == "white" else 0
+            if (
+                board[row][col - 1] is None
+                and board[row][col - 2] is None
+                and board[row][col - 3] is None
+                and board[row][rook_col] is not None
+                and isinstance(board[row][rook_col], Rook)
+                and not board[row][rook_col].has_moved
+            ):
+                castling_moves.append((row, col - 2))
+
+        return castling_moves
