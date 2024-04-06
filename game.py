@@ -6,15 +6,39 @@ from tokens.Bishop import Bishop
 from tokens.King import King
 from tokens.Queen import Queen
 from tokens.Pawn import Pawn
+import copy
+import time
 
 class Game:
-    def __init__(self, master):
+    is_rotation_enabled = False
+    
+    def __init__(self, master,history_pane,option_pane):
+
         self.master = master
-        # self.master.title("Chess Game")
+        self.state=[]
+        self.undo=0
+
+        self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
+
+
+        self.move_history_frame = history_pane
+
+        sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
+
+        self.column_names={0:"a",1:"b",2:"c",3:"d",4:"e",5:"f",6:"g",7:"h"}
+
+        self.move_labels = []
+        self.move_labels_text = []
+
+
+        # self.master_win.title("Chess Game")
         self.current_player="white"
 
+        self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("Arial", 16), bg="lightblue", bd=0)
+        self.current_player_label.pack(pady=20)
+
         self.current_orientation = 'normal'  # or 'normal' for default, 'rotated' for rotated
-        self.is_rotation_enabled = False
+        
 
 
         # Board and token instances
@@ -104,7 +128,7 @@ class Game:
                 else:
                     square.grid(row=row, column=col)
 
-        if self.is_rotation_enabled and self.current_orientation== "normal":
+        if Game.is_rotation_enabled and self.current_orientation== "normal":
             self.current_orientation="rotated"
         else:
             self.current_orientation= "normal"
@@ -115,7 +139,7 @@ class Game:
         if (row + col) % 2 == 0:
             return "white"
         else:
-            return "green"
+            return "lightgreen"
 
     def place_pieces(self):
         for row in range(8):
@@ -219,11 +243,20 @@ class Game:
 
             # Check for checkmate
             if self.is_checkmate_(king_position):
+                self.history.close()
                 for row in range(8):
                     for col in range(8):
                         self.board_squares[row][col].config(state="disable")
                 self.is_checkmate = True
                 self.board_squares[king_position[0]][king_position[1]].config(bg="red")
+
+    def resign(self):
+        self.is_checkmate = True
+        for row in range(8):
+            for col in range(8):
+                self.board_squares[row][col].config(state="disable")
+        king_position = self.find_king_position(self.current_player)
+        self.board_squares[king_position[0]][king_position[1]].config(bg="red")
                 
 
     def find_king_position(self,color):
@@ -241,7 +274,7 @@ class Game:
         for row in range(8):
             for col in range(8):
                 piece = myboard[row][col]
-                if piece and piece.color == opponent_color and not isinstance(piece, King):
+                if piece and piece.color == opponent_color: #and not isinstance(piece, King):
                     possible_moves = piece.get_possible_moves_op(myboard, (row, col),self.is_check,game=self)
                     if king_position in possible_moves:
                         return True
@@ -291,6 +324,11 @@ class Game:
                 self.board_squares[row][col].config(bg=self.get_square_color(row, col))
         
     def move_piece(self, start, end):
+        self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
+        print(self.move_labels_text)
+        if len(self.state) > 6:
+            del self.state[0]  # Remove the oldest label from the list
+
         piece = self.board[start[0]][start[1]]
         self.board[end[0]][end[1]] = piece
         self.board[start[0]][start[1]] = None
@@ -301,7 +339,11 @@ class Game:
         move=(start, end)
         self.current_player="black" if self.current_player=="white" else "white"
         self.rotate_board()
+        self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
+        self.current_player_label.config(text="Player Turn: "+self.current_player)
+
+
         
     def make_move(self, move):
         self.update_game_state()
@@ -367,6 +409,26 @@ class Game:
 
         # Check for check and checkmate
         self.update_game_state()
+
+    def add_move_to_history(self, move, symbol):
+        start,end=move
+        
+        move_text=f"{symbol} {self.column_names[start[1]]}{start[0]+1}-{self.column_names[end[1]]}{end[0]+1}"
+        self.move_labels_text.append(move_text)
+        move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("Arial", 20))
+        self.history.write(f"{start[1]},{start[0]},{[end[1]]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
+
+        if self.current_player=="white":
+            move_label.pack(anchor="w",padx=5)
+        else:
+            move_label.pack(anchor="e",padx=5)
+        self.move_labels.append(move_label)
+
+        if len(self.move_labels) > 15:
+            self.move_labels[0].destroy()  # Remove the oldest label from the GUI
+            del self.move_labels_text[0]
+            del self.move_labels[0]  # Remove the oldest label from the list
+
         
 
 if __name__ == "__main__":
