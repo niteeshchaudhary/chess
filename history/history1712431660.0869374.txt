@@ -1,0 +1,17 @@
+1,0,[2],2,black,♘,Knight
+1,0,[2],2,black,♘,Knight
+6,7,[5],5,white,♞,Knight
+4,1,[4],3,black,♙,Pawn
+6,6,[6],4,white,♟,Pawn
+6,0,[5],2,black,♘,Knight
+0,6,[0],4,white,♟,Pawn
+1,0,[0],2,black,♘,Knight
+6,7,[7],5,white,♞,Knight
+6,0,[7],2,black,♘,Knight
+1,7,[0],5,white,♞,Knight
+0,2,[2],3,black,♘,Knight
+7,5,[5],4,white,♞,Knight
+7,2,[5],3,black,♘,Knight
+0,5,[2],4,white,♞,Knight
+0,2,[1],4,black,♘,Knight
+1,7,[2],5,white,♞,Knight
