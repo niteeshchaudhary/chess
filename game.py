@@ -13,6 +13,10 @@ class Game:
         # self.master.title("Chess Game")
         self.current_player="white"
 
+        self.current_orientation = 'normal'  # or 'normal' for default, 'rotated' for rotated
+        self.is_rotation_enabled = False
+
+
         # Board and token instances
         self.board = self.setup_board()
         self.board_squares = self.create_board_squares()
@@ -28,6 +32,8 @@ class Game:
         for row in range(8):
             for col in range(8):
                 self.board_squares[row][col].bind("<Button-1>", lambda event, row=row, col=col: self.on_square_clicked(row, col))
+
+        self.rotate_board()
                 
         # Variable to store selected piece position
         self.selected_piece = None
@@ -86,6 +92,24 @@ class Game:
                 row_squares.append(square)
             squares.append(row_squares)
         return squares
+    
+    def rotate_board(self):
+
+        for row in range(8):
+            for col in range(8):
+                square = self.board_squares[row][col]
+                square.grid_forget()
+                if self.current_orientation == 'normal':
+                    square.grid(row=7-row, column=7-col)
+                else:
+                    square.grid(row=row, column=col)
+
+        if self.is_rotation_enabled and self.current_orientation== "normal":
+            self.current_orientation="rotated"
+        else:
+            self.current_orientation= "normal"
+
+
 
     def get_square_color(self, row, col):
         if (row + col) % 2 == 0:
@@ -276,6 +300,7 @@ class Game:
         self.board_squares[start[0]][start[1]].config(text="")
         move=(start, end)
         self.current_player="black" if self.current_player=="white" else "white"
+        self.rotate_board()
         self.make_move(move)
         
     def make_move(self, move):
