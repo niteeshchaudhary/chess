@@ -429,6 +429,13 @@ class Game:
             del self.move_labels_text[0]
             del self.move_labels[0]  # Remove the oldest label from the list
 
+    def generate_moves(self,):
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j]
+
+
+
         
 
 if __name__ == "__main__":
