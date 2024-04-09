@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from game import Game
+from two_player_game import Two_Player_Game
+from ai_game import AI_Game
 
 rotation_button=None
 undo_button=None
@@ -151,7 +152,31 @@ def p2Game(gmw):
     # board_frame.pack()
 
     
-    game_ = Game(board_frame,history_pane,option_pane)
+    game_ = Two_Player_Game(board_frame,history_pane,option_pane)
+
+def ai_Game(gmw):
+    global game_
+    gmw.destroy()
+    root.withdraw()
+    game_window = tk.Toplevel()
+    game_window.title("Game Window")
+    game_window.protocol("WM_DELETE_WINDOW", exit_game)
+
+    option_pane=create_top_pane(game_window)
+    history_pane=create_left_pane(game_window)
+
+    # Set window to fullscreen
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    game_window.geometry(f"{screen_width}x{screen_height}")
+    
+    board_frame=create_center_pane(game_window)
+
+    # board_frame.pack()
+
+    
+    game_ = AI_Game(board_frame,history_pane,option_pane)
+
 
 def start_game():
     # Close the main window
@@ -174,11 +199,11 @@ def start_game():
     button_frame.pack(pady=(root.winfo_height() / 3, 0))
 
     # Create five buttons
-    buttons = ["Exit","P2 Game","2","3","4","5"]
+    buttons = ["Exit","P2 Game","AI","3","4","5"]
     button = tk.Button(button_frame, text=buttons[1], command=lambda:p2Game(game_window), width=20, height=2)
     button.pack(pady=10)
 
-    button = tk.Button(button_frame, text=buttons[2], width=20, height=2)
+    button = tk.Button(button_frame, text=buttons[2],command=lambda:p2Game(game_window), width=20, height=2)
     button.pack(pady=10)
 
     button = tk.Button(button_frame, text=buttons[3], width=20, height=2)

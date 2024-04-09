@@ -1,6 +1,7 @@
 class Knight:
     def __init__(self, color):
         self.color = color
+        self.name="knight"
 
     def get_symbol(self):
         if self.color == "white":

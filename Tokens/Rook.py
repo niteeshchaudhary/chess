@@ -1,5 +1,6 @@
 class Rook:
     def __init__(self, color):
+        self.name="rook"
         self.color = color
         self.has_moved=False
 

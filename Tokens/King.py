@@ -3,6 +3,7 @@ from .Rook import Rook
 class King:
     def __init__(self, color):
         self.color = color
+        self.name="king"
         self.has_moved = False
 
     def get_symbol(self):
