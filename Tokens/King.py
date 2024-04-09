@@ -33,6 +33,7 @@ class King:
     def get_possible_moves(self, board, position,is_check,game):
         row, col = position
         possible_moves = []
+        castle_moves = []
 
         # Define the eight possible move offsets for a king
         offsets = [
@@ -49,7 +50,7 @@ class King:
 
         # Check for castling
         if not is_check:
-            possible_moves.extend(self.get_castling_moves(board, position))
+            castle_moves=self.get_castling_moves(board, position,possible_moves)
         
         # self.validate_moves()
 
@@ -59,11 +60,21 @@ class King:
             game.make_move_on_board(position, move, backup_board)
             if not game.is_king_under_attack(move, backup_board):
                 valid_moves.append(move)
+        
+        if len(castle_moves)>0:
+            for move in castle_moves:
+                print((move[0],move[1]-1),(move[0],move[1]-1) in  valid_moves,(move[0],move[1]+1),(move[0],move[1]+1) in  valid_moves,valid_moves)
+                if ( (move[0],move[1]-1) in  valid_moves) or (  (move[0],move[1]+1) in  valid_moves):
+                    backup_board = [row[:] for row in board]
+                    game.make_move_on_board(position, move, backup_board)
+                    if not game.is_king_under_attack(move, backup_board):
+                        valid_moves.append(move)
+
 
         return valid_moves
 
 
-    def get_castling_moves(self, board, position):
+    def get_castling_moves(self, board, position,possible_moves):
         castling_moves = []
         row, col = position
 
