@@ -9,7 +9,7 @@ from tokens.Pawn import Pawn
 import copy
 import time
 
-class Game:
+class Two_Player_Game:
     is_rotation_enabled = False
     
     def __init__(self, master,history_pane,option_pane):
@@ -31,7 +31,7 @@ class Game:
         self.move_labels_text = []
 
 
-        # self.master_win.title("Chess Game")
+        # self.master_win.title("Chess Two_Player_Game")
         self.current_player="white"
 
         self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("Arial", 16), bg="lightblue", bd=0)
@@ -45,7 +45,7 @@ class Game:
         self.board = self.setup_board()
         self.board_squares = self.create_board_squares()
 
-        # Game state
+        # Two_Player_Game state
         self.en_passant_target = None
         self.is_check = False
         self.is_checkmate = False
@@ -128,7 +128,7 @@ class Game:
                 else:
                     square.grid(row=row, column=col)
 
-        if Game.is_rotation_enabled and self.current_orientation== "normal":
+        if Two_Player_Game.is_rotation_enabled and self.current_orientation== "normal":
             self.current_orientation="rotated"
         else:
             self.current_orientation= "normal"
@@ -158,7 +158,7 @@ class Game:
             if self.selected_piece is None:
                 if piece.color==self.current_player:
                     # Highlight possible moves for the selected piece
-                    possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, game=self)
+                    possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, self)
                     self.highlight_possible_moves(possible_moves)
                     self.board_squares[row][col].config(bg="orange")
                     self.selected_piece = (row, col)
@@ -350,7 +350,7 @@ class Game:
 
         if self.is_checkmate:
             print(f"{self.current_player.capitalize()} is in checkmate!")
-            # Handle game over
+            # Handle Two_Player_game over
         elif self.is_check:
             print(f"{self.current_player.capitalize()} king is in check!")
             
@@ -429,10 +429,7 @@ class Game:
             del self.move_labels_text[0]
             del self.move_labels[0]  # Remove the oldest label from the list
 
-    def generate_moves(self,):
-        for i in range(8):
-            for j in range(8):
-                if self.board[i][j]
+
 
 
 
@@ -440,5 +437,5 @@ class Game:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    game = Game(root)
+    Two_Player_game = Two_Player_Game(root)
     root.mainloop()

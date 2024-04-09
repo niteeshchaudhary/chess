@@ -1,6 +1,7 @@
 class Bishop:
     def __init__(self, color):
         self.color = color
+        self.name="bishop"
 
     def get_symbol(self):
         if self.color == "white":

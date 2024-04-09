@@ -1,5 +1,6 @@
 class Queen:
     def __init__(self, color):
+        self.name="queen"
         self.color = color
 
     def get_symbol(self):
