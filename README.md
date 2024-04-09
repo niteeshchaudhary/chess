@@ -1,4 +1,4 @@
-# Its a smple two player classic chess game.
+# Its a simple two player classic chess game.
 to run it :
 - clone it
 - ensure u have tk installed in your system
