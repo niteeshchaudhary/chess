@@ -27,8 +27,10 @@ def restart_game(win_obj):
 
     # board_frame.pack()
 
-    
-    game_= Game(board_frame,history_pane,option_pane)
+    if isinstance(game_,AI_Game):
+        game_= AI_Game(board_frame,history_pane,option_pane)
+    else:
+        game_= Two_Player_Game(board_frame,history_pane,option_pane)
 
 def resign():
     global game_

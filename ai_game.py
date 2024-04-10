@@ -278,6 +278,19 @@ class AI_Game:
                 piece = self.board[row][col]
                 if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
+                
+    def draw(self):
+        for row in range(8):
+            for col in range(8):
+                self.board_squares[row][col].config(state="disable")
+                self.is_checkmate = True
+
+        king_position = self.find_king_position("black")
+        self.board_squares[king_position[0]][king_position[1]].config(bg="#ff00ff")
+
+        king_position = self.find_king_position("white")
+        self.board_squares[king_position[0]][king_position[1]].config(bg="ff00ff")
+
 
 
     def is_king_under_attack(self, king_position,board=[]):
@@ -362,7 +375,10 @@ class AI_Game:
         if self.is_checkmate:
             return
         moves=self.generate_moves_dict()
-        current_position,next_position=self.myalgo.getNextMove(self.board,moves)
+        if len(moves.keys())==0:
+            self.draw()
+            return
+        current_position,next_position=self.myalgo.getNextMove(self.board,self)
         if(next_position in moves[current_position[0]*10+current_position[1]]):
             self.move_piece(current_position,next_position)
             self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
@@ -457,22 +473,26 @@ class AI_Game:
             del self.move_labels_text[0]
             del self.move_labels[0]  # Remove the oldest label from the list
 
-    def generate_moves_dict(self):
+    def generate_moves_dict(self,player="",board=[]):
+        player=self.current_player if player=="" else player
+        myboard=self.board if board==[] else board
         moves={}
         for i in range(8):
             for j in range(8):
-                if self.board[i][j] and self.board[i][j].color==self.current_player:
-                    mv=self.board[i][j].get_possible_moves(self.board,(i,j),self.is_check,self)
+                if myboard[i][j] and myboard[i][j].color==player:
+                    mv=myboard[i][j].get_possible_moves(myboard,(i,j),self.is_check,self)
                     if mv:
                         moves[i*10+j] = mv
         return moves
 
-    def generate_moves_list(self):
+    def generate_moves_list(self,player="",board=[]):
+        player=self.current_player if player=="" else player
+        myboard=self.board if board==[] else board
         moves=[]
         for i in range(8):
             for j in range(8):
-                if self.board[i][j] and self.board[i][j].color==self.current_player:
-                    for mv in self.board[i][j].get_possible_moves(self.board,(i,j),self.is_check,self):
+                if myboard[i][j] and myboard[i][j].color==player:
+                    for mv in myboard[i][j].get_possible_moves(myboard,(i,j),self.is_check,self):
                         moves.append([(i,j),mv])
 
         return moves
