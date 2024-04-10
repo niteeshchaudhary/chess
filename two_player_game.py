@@ -1,11 +1,6 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-from tokens.Rook import Rook
-from tokens.Knight import Knight
-from tokens.Bishop import Bishop
-from tokens.King import King
-from tokens.Queen import Queen
-from tokens.Pawn import Pawn
+from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 import copy
 import time
 

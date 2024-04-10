@@ -51,7 +51,7 @@ class King:
 
         # Check for castling
         if not is_check:
-            castle_moves=self.get_castling_moves(board, position,possible_moves)
+            castle_moves=self.get_castling_moves(board, position)
         
         # self.validate_moves()
 
@@ -75,7 +75,7 @@ class King:
         return valid_moves
 
 
-    def get_castling_moves(self, board, position,possible_moves):
+    def get_castling_moves(self, board, position):
         castling_moves = []
         row, col = position
 

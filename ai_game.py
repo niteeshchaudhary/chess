@@ -1,11 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-from tokens.Rook import Rook
-from tokens.Knight import Knight
-from tokens.Bishop import Bishop
-from tokens.King import King
-from tokens.Queen import Queen
-from tokens.Pawn import Pawn
+from tokens import Rook,Knight, Bishop, King, Queen,Pawn
+from helpers import RandomMove as MyAlgo
 import copy
 import time
 
@@ -17,6 +13,8 @@ class AI_Game:
         self.master = master
         self.state=[]
         self.undo=0
+
+        self.myalgo=MyAlgo()
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
@@ -62,6 +60,20 @@ class AI_Game:
         # Variable to store selected piece position
         self.selected_piece = None
 
+    def ai_choose_piece(self,position):
+        piece=self.board[position[0]][position[1]]
+        inp=self.myalgo.choose_piece(position)
+        if inp == "rook":
+            self.board[position[0]][position[1]]=Rook(piece.color)
+        elif inp == "bishop":
+            self.board[position[0]][position[1]]=Bishop(piece.color)
+        elif inp == "knight":
+            self.board[position[0]][position[1]]=Knight(piece.color)
+        else:
+            self.board[position[0]][position[1]]=Queen(piece.color)
+
+        self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
+
     def choose_piece(self,position):
         piece=self.board[position[0]][position[1]]
         # Function to set the selected inp and close the dialog
@@ -89,6 +101,7 @@ class AI_Game:
         tk.Button(dialog, text=buttons_text[1],width=10, height=2,  command=lambda: set_inp(buttons_text[1])).pack(padx=5, pady=5)
         tk.Button(dialog, text=buttons_text[2],width=10, height=2,  command=lambda: set_inp(buttons_text[2])).pack(padx=5, pady=5)
         tk.Button(dialog, text=buttons_text[3],width=10, height=2,  command=lambda: set_inp(buttons_text[3])).pack(padx=5, pady=5)
+        self.master.wait_window(dialog)
         
 
     def setup_board(self):
@@ -324,7 +337,8 @@ class AI_Game:
                 self.board_squares[row][col].config(bg=self.get_square_color(row, col))
         
     def move_piece(self, start, end):
-        self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
+        if self.current_player!="black":
+            self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
         print(self.move_labels_text)
         if len(self.state) > 6:
             del self.state[0]  # Remove the oldest label from the list
@@ -338,14 +352,21 @@ class AI_Game:
         self.board_squares[start[0]][start[1]].config(text="")
         move=(start, end)
         self.current_player="black" if self.current_player=="white" else "white"
-        self.rotate_board()
         self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
-        if self.current_player:
-            self.generate_moves_list()
-            self.generate_moves_dict()
+        if self.current_player=="black":
+            self.opponent_turn()
 
+    def opponent_turn(self):
+        if self.is_checkmate:
+            return
+        moves=self.generate_moves_dict()
+        current_position,next_position=self.myalgo.getNextMove(self.board,moves)
+        if(next_position in moves[current_position[0]*10+current_position[1]]):
+            self.move_piece(current_position,next_position)
+            self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+            self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF") 
 
         
     def make_move(self, move):
@@ -369,7 +390,11 @@ class AI_Game:
                     self.board[start_position[0]][position[1]]=None
                     self.board_squares[start_position[0]][position[1]].config(text="")
                 elif position[0] == 0 or position[0] == 7:
-                    self.choose_piece(position)
+                    if self.current_player=="white":#have already changed the current player
+                        self.ai_choose_piece(position)
+                    else:
+                        self.choose_piece(position)
+                    
 
 
                 # if self.en_passant_target and piece.en_passant_target
@@ -432,27 +457,25 @@ class AI_Game:
             del self.move_labels_text[0]
             del self.move_labels[0]  # Remove the oldest label from the list
 
-    def generate_moves_dict(self,):
+    def generate_moves_dict(self):
         moves={}
         for i in range(8):
             for j in range(8):
-                if self.board[i][j]:
+                if self.board[i][j] and self.board[i][j].color==self.current_player:
                     mv=self.board[i][j].get_possible_moves(self.board,(i,j),self.is_check,self)
                     if mv:
                         moves[i*10+j] = mv
-        print(moves)
+        return moves
 
-    def generate_moves_list(self,):
+    def generate_moves_list(self):
         moves=[]
         for i in range(8):
             for j in range(8):
-                if self.board[i][j]:
+                if self.board[i][j] and self.board[i][j].color==self.current_player:
                     for mv in self.board[i][j].get_possible_moves(self.board,(i,j),self.is_check,self):
                         moves.append([(i,j),mv])
-        print(moves)
 
-
-
+        return moves
 
 
         

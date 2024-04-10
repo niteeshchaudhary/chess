@@ -203,7 +203,7 @@ def start_game():
     button = tk.Button(button_frame, text=buttons[1], command=lambda:p2Game(game_window), width=20, height=2)
     button.pack(pady=10)
 
-    button = tk.Button(button_frame, text=buttons[2],command=lambda:p2Game(game_window), width=20, height=2)
+    button = tk.Button(button_frame, text=buttons[2],command=lambda:ai_Game(game_window), width=20, height=2)
     button.pack(pady=10)
 
     button = tk.Button(button_frame, text=buttons[3], width=20, height=2)
