@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
-from helpers import RandomMove as MyAlgo
+from helpers import RandomMove #as MyAlgo
+from helpers import MinMax as MyAlgo
 import copy
 import time
 

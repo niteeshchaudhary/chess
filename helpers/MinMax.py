@@ -77,19 +77,20 @@ class MinMax:
         mv_score={}
         max_score=-1000000
         move_max=None
-        for k,v in moves:
+        print(moves)
+        for k,v in moves.items():
             start_p=(k//10,k%10)
             for next_move in v:
                 mv_score[(start_p,next_move)]=0
                 #max
-                if next_board[mv[0]][mv[1]] and next_board[mv[0]][mv[1]].color=="white":
-                    if next_board[mv[0]][mv[1]].name=="queen":
+                if board[next_move[0]][next_move[1]] and board[next_move[0]][next_move[1]].color=="white":
+                    if board[next_move[0]][next_move[1]].name=="queen":
                         mv_score[(start_p,next_move)]+=10
-                    elif next_board[mv[0]][mv[1]].name=="rook":
+                    elif board[next_move[0]][next_move[1]].name=="rook":
                         mv_score[(start_p,next_move)]+=7
-                    elif next_board[mv[0]][mv[1]].name=="bishop":
+                    elif board[next_move[0]][next_move[1]].name=="bishop":
                         mv_score[(start_p,next_move)]+=5
-                    elif next_board[mv[0]][mv[1]].name=="knight":
+                    elif board[next_move[0]][next_move[1]].name=="knight":
                         mv_score[(start_p,next_move)]+=3
                     else:
                         mv_score[(start_p,next_move)]+=1
@@ -98,25 +99,26 @@ class MinMax:
                 self.make_move_on_board(start_p,next_move,next_board)
                 next_board_2=[row[:] for row in next_board]
                 opp_moves=game_obj.generate_moves_dict("white",next_board)
-                for mv in opp_moves.values(): #min
-                    if next_board[mv[0]][mv[1]] and next_board[mv[0]][mv[1]].color=="black":
-                        if next_board[mv[0]][mv[1]].name=="queen":
-                            mv_score[(start_p,next_move)]-=10
-                        elif next_board[mv[0]][mv[1]].name=="rook":
-                            mv_score[(start_p,next_move)]-=7
-                        elif next_board[mv[0]][mv[1]].name=="bishop":
-                            mv_score[(start_p,next_move)]-=5
-                        elif next_board[mv[0]][mv[1]].name=="knight":
-                            mv_score[(start_p,next_move)]-=3
-                        else:
-                            mv_score[(start_p,next_move)]-=1
-                
-                if mv_score[(start_p,next_move)]>max_score:
-                    move_max=(k,next_move[0]*10+next_move[1])
-                    max_score=mv_score[(start_p,next_move)]
-        
+                for k_,v_ in opp_moves.items():
+                    for mv in v_: #min
+                        if next_board[mv[0]][mv[1]] and next_board[mv[0]][mv[1]].color=="black":
+                            if next_board[mv[0]][mv[1]].name=="queen":
+                                mv_score[(start_p,next_move)]-=10
+                            elif next_board[mv[0]][mv[1]].name=="rook":
+                                mv_score[(start_p,next_move)]-=7
+                            elif next_board[mv[0]][mv[1]].name=="bishop":
+                                mv_score[(start_p,next_move)]-=5
+                            elif next_board[mv[0]][mv[1]].name=="knight":
+                                mv_score[(start_p,next_move)]-=3
+                            else:
+                                mv_score[(start_p,next_move)]-=1
+                    
+        if mv_score[(start_p,next_move)]>max_score:
+            move_max=(start_p,next_move)
+            max_score=mv_score[(start_p,next_move)]
+    
 
-        return ()
+        return move_max
 
 
             
