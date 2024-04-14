@@ -2,13 +2,13 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 from helpers import RandomMove as MyAlgo
-from helpers import MinMax #as MyAlgo
-from helpers import MinMaxd1 #as MyAlgo
+from helpers import MinMax as MyAlgo_opp
+from helpers import MinMaxd1 #as MyAlgo_opp
 import copy
 import time
 import threading
 
-class AI_Game:
+class AI_Vs_AI_Game:
     is_rotation_enabled = False
     
     def __init__(self, master,history_pane,option_pane):
@@ -17,7 +17,8 @@ class AI_Game:
         self.state=[]
         self.undo=0
 
-        self.myalgo=MyAlgo()
+        self.myalgo=MyAlgo_opp()
+        self.myalgo_opp=MyAlgo()
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
@@ -34,6 +35,7 @@ class AI_Game:
 
         # self.master_win.title("Chess Game")
         self.current_player="white"
+        
 
         self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("Arial", 16), bg="lightblue", bd=0)
         self.current_player_label.pack(pady=20)
@@ -62,6 +64,9 @@ class AI_Game:
                 
         # Variable to store selected piece position
         self.selected_piece = None
+
+        white_thread=threading.Thread(target=self.white_turn)
+        white_thread.start()
 
     def ai_choose_piece(self,position):
         piece=self.board[position[0]][position[1]]
@@ -144,7 +149,7 @@ class AI_Game:
                 else:
                     square.grid(row=row, column=col)
 
-        if AI_Game.is_rotation_enabled and self.current_orientation== "normal":
+        if AI_Vs_AI_Game.is_rotation_enabled and self.current_orientation== "normal":
             self.current_orientation="rotated"
         else:
             self.current_orientation= "normal"
@@ -371,10 +376,13 @@ class AI_Game:
         self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
+        time.sleep(0.5)
         if self.current_player=="black":
-
             opp_thread=threading.Thread(target=self.opponent_turn)
             opp_thread.start()
+        elif self.current_player=="white":
+            white_thread=threading.Thread(target=self.white_turn)
+            white_thread.start()
 
 
     def opponent_turn(self):
@@ -385,15 +393,36 @@ class AI_Game:
             self.draw()
             return
         try:
-            current_position,next_position=self.myalgo.getNextMove(self.board,self)
+            current_position,next_position=self.myalgo.getNextMove(board=self.board,game_obj=self,player="black")
             if(next_position in moves[current_position[0]*10+current_position[1]]):
                 self.move_piece(current_position,next_position)
                 self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
-                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF") 
+                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
             else:
                 self.draw()
         except Exception as e:
-            self.history.close()
+            print(e)
+            self.draw()
+            return 
+    
+    def white_turn(self):
+        if self.is_checkmate:
+            return
+        self.clear_highlighting()
+        moves=self.generate_moves_dict()
+        if len(moves.keys())==0:
+            self.draw()
+            return
+        try:
+            current_position,next_position=self.myalgo_opp.getNextMove(board=self.board,game_obj=self,player="white")
+            if(next_position in moves[current_position[0]*10+current_position[1]]):
+                self.move_piece(current_position,next_position)
+                self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
+            else:
+                self.draw()
+        except Exception as e:
+            print(e)
             self.draw()
             return
 
@@ -515,5 +544,5 @@ class AI_Game:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    game = AI_Game(root)
+    game = AI_Vs_AI_Game(root)
     root.mainloop()

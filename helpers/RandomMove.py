@@ -20,11 +20,11 @@ class RandomMove:
         return moves
 
     
-    def getNextMove(self,board,game_obj):
-        moves=game_obj.generate_moves_dict("black",board)
+    def getNextMove(self,board,game_obj,player="black"):
+        moves=game_obj.generate_moves_dict(player,board)
         keys=list(moves.keys())
         cur=random.choice(keys)
         next_position=random.choice(moves[cur])
         current_position=[cur//10,cur%10]
-        return[current_position,next_position]
+        return [current_position,next_position]
 

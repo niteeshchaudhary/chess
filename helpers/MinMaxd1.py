@@ -1,12 +1,10 @@
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 import random
 
-# mysteps=open("steps.csv","w+")
-class MinMax:
+class MinMaxd1:
 
     def __init__(self):
         self.players={"black":"white","white":"black"}
-        pass
 
     def choose_piece(self,position):
         options=['queen']*50+['knight']*10
@@ -18,12 +16,12 @@ class MinMax:
         board[start[0]][start[1]] = None
 
     
-    def getNextMove(self,board,game_obj,player="black",d=1):
+    def getNextMove(self,board,game_obj,player="black"):
         moves=game_obj.generate_moves_dict(player,board)
         mv_score={}
         max_score=-1000000
         move_max=None
-        # print(moves)
+        print(moves)
         for k,v in moves.items():
             start_p=(k//10,k%10)
             for next_move in v:
@@ -62,22 +60,13 @@ class MinMax:
                                 mv_score[(start_p,next_move)]-=30
                             else:
                                 mv_score[(start_p,next_move)]-=10
-                        
-                        if d>0:
-                            self.make_move_on_board(start_p,next_move,next_board_2)
-                            _,score=self.getNextMove(next_board_2,game_obj,player,d-1)
-                            if _ is not None:
-                                mv_score[(start_p,next_move)]+=score
-                            else:
-                                mv_score[(start_p,next_move)]-=900
                     
                 if mv_score[(start_p,next_move)]>max_score:
                     move_max=(start_p,next_move)
                     max_score=mv_score[(start_p,next_move)]
     
-        if d==1:
-            return move_max
-        return move_max,max_score
+
+        return move_max
     
 
         # def generate_moves_dict(self,player,board):
