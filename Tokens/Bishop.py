@@ -2,6 +2,7 @@ class Bishop:
     def __init__(self, color):
         self.color = color
         self.name="bishop"
+        self.has_moved = False
 
     def get_symbol(self):
         if self.color == "white":

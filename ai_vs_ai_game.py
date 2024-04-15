@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 from helpers import RandomMove as MyAlgo
-from helpers import MinMax as MyAlgo_opp
-from helpers import MinMaxd1 #as MyAlgo_opp
+from helpers import MinMax #as MyAlgo_opp
+from helpers import AlphaBeta as MyAlgo_opp
 import copy
 import time
 import threading
@@ -65,7 +65,7 @@ class AI_Vs_AI_Game:
         # Variable to store selected piece position
         self.selected_piece = None
 
-        white_thread=threading.Thread(target=self.white_turn)
+        white_thread=threading.Thread(target=self.white_turn,daemon=True)
         white_thread.start()
 
     def ai_choose_piece(self,position):
@@ -122,6 +122,15 @@ class AI_Vs_AI_Game:
         # Place black pieces
         board[7] = [Rook("black"), Knight("black"), Bishop("black"), Queen("black"), King("black"), Bishop("black"), Knight("black"), Rook("black")]
         board[6] = [Pawn("black") for _ in range(8)]
+
+        # custom_board = [[Rook("white"), None, Bishop("white"), Queen("white"), King("white"), Bishop("white"), Knight("white"), Rook("white")],
+        #          [None,Pawn("white"),Pawn("white"),Pawn("white"),Pawn("white"),Pawn("white"),None,Pawn("white")],
+        #          [None,None,Knight("white"),None,None,None,None,None],
+        #          [Pawn("white"),None,None,None,None,None,None,None],
+        #          [None,None,Pawn("black"),None,None,None,Pawn("white"),None],
+        #          [None,None,None,Pawn("black"),None,Pawn("black"),None,None],
+        #          [Pawn("black"),Pawn("black"),None,None,Pawn("black"),None,Pawn("black"),Pawn("black")],
+        #          [Rook("black"), Knight("black"), Bishop("black"), Queen("black"), King("black"), Bishop("black"), Knight("black"), Rook("black")]]
 
         return board
     
@@ -280,12 +289,15 @@ class AI_Vs_AI_Game:
         self.board_squares[king_position[0]][king_position[1]].config(bg="red")
                 
 
-    def find_king_position(self,color):
+    def find_king_position(self,color,board=[]):
+        if len(board)==0:
+            board=self.board
         for row in range(8):
             for col in range(8):
-                piece = self.board[row][col]
+                piece = board[row][col]
                 if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
+                
                 
     def draw(self):
         for row in range(8):
@@ -297,7 +309,7 @@ class AI_Vs_AI_Game:
         self.board_squares[king_position[0]][king_position[1]].config(bg="#ff00ff")
 
         king_position = self.find_king_position("white")
-        self.board_squares[king_position[0]][king_position[1]].config(bg="ff00ff")
+        self.board_squares[king_position[0]][king_position[1]].config(bg="#ff00ff")
 
 
 
@@ -347,6 +359,36 @@ class AI_Vs_AI_Game:
 
         return True
     
+
+    def is_checkmate_board(self, board,player):
+        king_position=self.find_king_position(player,board)
+        # Check if the king has any valid moves
+        king = board[king_position[0]][king_position[1]]
+        is_check= self.is_king_under_attack(king_position,board)
+        king_moves = king.get_possible_moves(board, king_position,is_check,game=self)
+
+        # Remove any moves that would still leave the king in check
+        valid_moves = []
+        for move in king_moves:
+            backup_board = [row[:] for row in board]
+            self.make_move_on_board(king_position, move, backup_board)
+            if not self.is_king_under_attack(move):
+                valid_moves.append(move)
+            
+        # Check if any other piece can block or capture the attacking piece
+        if valid_moves:
+            return False
+
+        for row in range(8):
+            for col in range(8):
+                piece = board[row][col]
+                if piece and piece.color == self.current_player:
+                    possible_moves = piece.get_possible_moves(self.board, (row, col),is_check,game=self)
+                    if len(possible_moves)>0: 
+                        return False
+
+        return True
+    
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]
         board[end[0]][end[1]] = piece
@@ -358,9 +400,12 @@ class AI_Vs_AI_Game:
                 self.board_squares[row][col].config(bg=self.get_square_color(row, col))
         
     def move_piece(self, start, end):
+        if self.is_checkmate:
+            return
+         
         if self.current_player!="black":
             self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
-        print(self.move_labels_text)
+        print("MoveLabel:",self.move_labels_text)
         if len(self.state) > 6:
             del self.state[0]  # Remove the oldest label from the list
 
@@ -378,10 +423,10 @@ class AI_Vs_AI_Game:
         self.current_player_label.config(text="Player Turn: "+self.current_player)
         time.sleep(0.5)
         if self.current_player=="black":
-            opp_thread=threading.Thread(target=self.opponent_turn)
+            opp_thread=threading.Thread(target=self.opponent_turn,daemon=True)
             opp_thread.start()
         elif self.current_player=="white":
-            white_thread=threading.Thread(target=self.white_turn)
+            white_thread=threading.Thread(target=self.white_turn,daemon=True)
             white_thread.start()
 
 
@@ -392,18 +437,19 @@ class AI_Vs_AI_Game:
         if len(moves.keys())==0:
             self.draw()
             return
-        try:
-            current_position,next_position=self.myalgo.getNextMove(board=self.board,game_obj=self,player="black")
-            if(next_position in moves[current_position[0]*10+current_position[1]]):
-                self.move_piece(current_position,next_position)
-                self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
-                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
-            else:
-                self.draw()
-        except Exception as e:
-            print(e)
+        # try:
+        current_position,next_position=self.myalgo.getNextMove(board=self.board,game_obj=self,player="black")
+        print("black",current_position,next_position)
+        if(next_position in moves[current_position[0]*10+current_position[1]]):
+            self.move_piece(current_position,next_position)
+            self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+            self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
+        else:
             self.draw()
-            return 
+        # except Exception as e:
+        #     print("Error 1:",e)
+        #     self.draw()
+        #     return 
     
     def white_turn(self):
         if self.is_checkmate:
@@ -415,6 +461,7 @@ class AI_Vs_AI_Game:
             return
         try:
             current_position,next_position=self.myalgo_opp.getNextMove(board=self.board,game_obj=self,player="white")
+            print("white",current_position,next_position)
             if(next_position in moves[current_position[0]*10+current_position[1]]):
                 self.move_piece(current_position,next_position)
                 self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
@@ -422,7 +469,7 @@ class AI_Vs_AI_Game:
             else:
                 self.draw()
         except Exception as e:
-            print(e)
+            print("Error2",e)
             self.draw()
             return
 
@@ -535,7 +582,7 @@ class AI_Vs_AI_Game:
             for j in range(8):
                 if myboard[i][j] and myboard[i][j].color==player:
                     for mv in myboard[i][j].get_possible_moves(myboard,(i,j),self.is_check,self):
-                        moves.append([(i,j),mv])
+                        moves.append(((i,j),mv))
 
         return moves
 

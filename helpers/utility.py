@@ -61,17 +61,31 @@ class Utility:
                 self.is_checkmate = True
 
 
-    def resign(self):
-        self.is_checkmate = True
-                
-
-    def find_king_position(self,color):
+    def find_king_position(self,color,board=[]):
+        if len(board)==0:
+            board=self.board
         for row in range(8):
             for col in range(8):
-                piece = self.board[row][col]
+                piece = board[row][col]
                 if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
+                
 
+
+
+    def is_king_under_attack(self, king_position,board=[]):
+        opponent_color = "white" if self.current_player == "black" else "black"
+        myboard=self.board if board==[] else board
+        # print("King : ",opponent_color)
+        for row in range(8):
+            for col in range(8):
+                piece = myboard[row][col]
+                if piece and piece.color == opponent_color: #and not isinstance(piece, King):
+                    possible_moves = piece.get_possible_moves_op(myboard, (row, col),self.is_check,game=self)
+                    if king_position in possible_moves:
+                        return True
+
+        return False
 
     def is_king_under_attack(self, king_position,board=[]):
         opponent_color = "white" if self.current_player == "black" else "black"
@@ -114,6 +128,34 @@ class Utility:
                         return False
 
         return True
+    
+    def is_checkmate_board(self, board,player,is_check=False):
+        king_position=self.find_king_position(player,board)
+        # Check if the king has any valid moves
+        king = board[king_position[0]][king_position[1]]
+        if self.is_king_under_attack(self, king_position,board):
+            is_check=True
+        king_moves = king.get_possible_moves(board, king_position,is_check,game=self)
+
+        # Remove any moves that would still leave the king in check
+        valid_moves = []
+        for move in king_moves:
+            backup_board = [row[:] for row in board]
+            self.make_move_on_board(king_position, move, backup_board)
+            if not self.is_king_under_attack(move):
+                valid_moves.append(move)
+            
+        # Check if any other piece can block or capture the attacking piece
+        if valid_moves:
+            return False
+
+        for row in range(8):
+            for col in range(8):
+                piece = board[row][col]
+                if piece and piece.color == self.current_player:
+                    possible_moves = piece.get_possible_moves(self.board, (row, col),is_check,game=self)
+                    if len(possible_moves)>0: 
+                        return False
     
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]

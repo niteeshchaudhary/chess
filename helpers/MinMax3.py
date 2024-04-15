@@ -1,6 +1,6 @@
 import random
 
-class AlphaBeta:
+class MinMax:
 
     def __init__(self):
         self.players={"black":"white","white":"black"}
@@ -38,17 +38,21 @@ class AlphaBeta:
         
         return score
 
-    def minmax(self,board,game_obj,player,alpha,beta,depth=2,isMaxplayer=True):
-        moves=game_obj.generate_moves_list(player,board)
-        # print(moves)
+    def minmax(self,board,game_obj,player,depth=2,isMaxplayer=True):
+
+        moves=random.shuffle(game_obj.generate_moves_list(player,board))
+        print(moves)
+        
 
         if depth==0:
             return None,self.evaluate_board(board,player,isMaxplayer)
-        if not moves:
+
+        if len(moves)==0:
             if isMaxplayer:
                 return None,-10000000
             else:
                 return None,10000000
+        
         best_move=random.choice(moves)
         
         if isMaxplayer:
@@ -56,29 +60,23 @@ class AlphaBeta:
             for child in moves:
                 next_board= [row[:] for row in board]
                 game_obj.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,False)
+                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,False)
                 if myscore>maxscore:
                     best_move=child
                     maxscore=myscore
-                alpha=max(myscore,alpha)
-                if beta<=alpha:
-                    break
             return best_move,maxscore
         else:
             minscore=+1000000
             for child in moves:
                 next_board= [row[:] for row in board]
                 game_obj.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,True)
+                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,True)
                 if myscore<minscore:
                     best_move=child
                     minscore=myscore
-                beta=min(myscore,beta)
-                if beta<=alpha:
-                    break
             return best_move,minscore
     
-    def getNextMove(self,board,game_obj,player="black",depth=4):
-        move,_=self.minmax(board,game_obj,player,-100000000,100000000,depth,True)
+    def getNextMove(self,board,game_obj,player="black",depth=3):
+        move,_=self.minmax(board,game_obj,player,depth,False)
         print(move)
         return move

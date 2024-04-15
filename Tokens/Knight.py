@@ -2,6 +2,7 @@ class Knight:
     def __init__(self, color):
         self.color = color
         self.name="knight"
+        self.has_moved = False
 
     def get_symbol(self):
         if self.color == "white":

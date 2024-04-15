@@ -1,144 +1,83 @@
-from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 import random
 
-# mysteps=open("steps.csv","w+")
 class MinMax:
 
     def __init__(self):
         self.players={"black":"white","white":"black"}
-        pass
+        self.score={"pawn":10,"knight":30,"bishop":30,"rook":50,"queen":90,"king":9000}
 
+    def make_move_on_board(self, start, end, board):
+        piece = board[start[0]][start[1]]
+        piece.has_moved = True
+        board[end[0]][end[1]] = piece
+        board[start[0]][start[1]] = None
+        
     def choose_piece(self,position):
         options=['queen']*50+['knight']*10
         return random.choice(options)
-    
-    def make_move_on_board(self, start, end, board):
-        piece = board[start[0]][start[1]]
-        board[end[0]][end[1]] = piece
-        board[start[0]][start[1]] = None
 
-    
-    def getNextMove(self,board,game_obj,player="black",d=1):
-        moves=game_obj.generate_moves_dict(player,board)
-        mv_score={}
-        max_score=-1000000
-        move_max=None
-        # print(moves)
-        for k,v in moves.items():
-            start_p=(k//10,k%10)
-            for next_move in v:
-                mv_score[(start_p,next_move)]=0
-                #max
-                if board[next_move[0]][next_move[1]] and board[next_move[0]][next_move[1]].color==self.players[player]:
-                    if board[next_move[0]][next_move[1]].name=="king":
-                        mv_score[(start_p,next_move)]+=900
-                    elif board[next_move[0]][next_move[1]].name=="queen":
-                        mv_score[(start_p,next_move)]+=90
-                    elif board[next_move[0]][next_move[1]].name=="rook":
-                        mv_score[(start_p,next_move)]+=50
-                    elif board[next_move[0]][next_move[1]].name=="bishop":
-                        mv_score[(start_p,next_move)]+=30
-                    elif board[next_move[0]][next_move[1]].name=="knight":
-                        mv_score[(start_p,next_move)]+=30
-                    else:
-                        mv_score[(start_p,next_move)]+=10
 
-                next_board=[row[:] for row in board]
-                self.make_move_on_board(start_p,next_move,next_board)
-                next_board_2=[row[:] for row in next_board]
-                opp_moves=game_obj.generate_moves_dict(self.players[player],next_board)
-                for k_,v_ in opp_moves.items():
-                    for mv in v_: #min
-                        if next_board[mv[0]][mv[1]] and next_board[mv[0]][mv[1]].color==player:
-                            if next_board[mv[0]][mv[1]].name=="king":
-                                mv_score[(start_p,next_move)]-=900
-                            elif next_board[mv[0]][mv[1]].name=="queen":
-                                mv_score[(start_p,next_move)]-=90
-                            elif next_board[mv[0]][mv[1]].name=="rook":
-                                mv_score[(start_p,next_move)]-=50
-                            elif next_board[mv[0]][mv[1]].name=="bishop":
-                                mv_score[(start_p,next_move)]-=30
-                            elif next_board[mv[0]][mv[1]].name=="knight":
-                                mv_score[(start_p,next_move)]-=30
-                            else:
-                                mv_score[(start_p,next_move)]-=10
-                        
-                        if d>0:
-                            self.make_move_on_board(start_p,next_move,next_board_2)
-                            _,score=self.getNextMove(next_board_2,game_obj,player,d-1)
-                            if _ is not None:
-                                mv_score[(start_p,next_move)]+=score
-                            else:
-                                mv_score[(start_p,next_move)]-=900
+    def evaluate_board(self,board,player,isMaxplayer):
+        score=0
+        if isMaxplayer:
+            for i in range(8):
+                for j in range(8):
+                    if board[i][j]:
+                        if board[i][j].color==player:
+                            score+=self.score[board[i][j].name]
+                        else:
+                            score-=self.score[board[i][j].name]
                     
-                if mv_score[(start_p,next_move)]>max_score:
-                    move_max=(start_p,next_move)
-                    max_score=mv_score[(start_p,next_move)]
-    
-        if d==1:
-            return move_max
-        return move_max,max_score
-    
-
-        # def generate_moves_dict(self,player,board):
-    #     moves={}
-    #     for i in range(8):
-    #         for j in range(8):
-    #             if board[i][j] and board[i][j].color==player:
-    #                 mv=board[i][j].get_possible_moves(board,(i,j),self.is_check,self)
-    #                 if mv:
-    #                     moves[i*10+j] = mv
-    #     return moves
-    
-    # def generate_moves_list(self,player,board):
-    #     moves=[]
-    #     for i in range(8):
-    #         for j in range(8):
-    #             if board[i][j] and board[i][j].color==player:
-    #                 for mv in board[i][j].get_possible_moves(board,(i,j),self.is_check,self):
-    #                     moves.append([(i,j),mv])
-
-    #     return moves
-
-    # def minimax(self, depth, is_maximizing):
-    #     if depth == 0 or self.board.is_checkmate():
-    #         return -self.evaluate_board()
-
-    #     if is_maximizing:
-    #         max_eval = float('-inf')
-    #         for move in self.board.legal_moves:
-    #             self.board.push(move)
-    #             eval = self.minimax(depth - 1, False)
-    #             self.board.pop()
-    #             max_eval = max(max_eval, eval)
-    #         return max_eval
-    #     else:
-    #         min_eval = float('inf')
-    #         for move in self.board.legal_moves:
-    #             self.board.push(move)
-    #             eval = self.minimax(depth - 1, True)
-    #             self.board.pop()
-    #             min_eval = min(min_eval, eval)
-    #         return min_eval
-
-    # def calculate_best_move(self, depth):
-    #     best_move = None
-    #     best_value = float('-inf')
-    #     for move in self.board.legal_moves:
-    #         self.board.push(move)
-    #         board_value = self.minimax(depth - 1, False)
-    #         self.board.pop()
-    #         if board_value > best_value:
-    #             best_value = board_value
-    #             best_move = move
-    #     return best_move
-
-
-            
-                        
-
-
-
-
-
+        else:
+            for i in range(8):
+                for j in range(8):
+                    if board[i][j]:
+                        if board[i][j].color==player:
+                            score-=self.score[board[i][j].name]
+                        else:
+                            score+=self.score[board[i][j].name]
         
+        return score
+
+    def minmax(self,board,game_obj,player,depth=2,isMaxplayer=True):
+
+        moves=game_obj.generate_moves_list(player,board)
+        #print(moves)
+        
+
+        if depth==0:
+            return None,self.evaluate_board(board,player,isMaxplayer)
+
+        if not moves:
+            if isMaxplayer:
+                return None,-10000000
+            else:
+                return None,10000000
+        
+        best_move=random.choice(moves)
+        
+        if isMaxplayer:
+            maxscore=-10000000
+            for child in moves:
+                next_board= [row[:] for row in board]
+                game_obj.make_move_on_board(child[0],child[1],next_board)
+                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,False)
+                if myscore>maxscore:
+                    best_move=child
+                    maxscore=myscore
+            return best_move,maxscore
+        else:
+            minscore=+1000000
+            for child in moves:
+                next_board= [row[:] for row in board]
+                game_obj.make_move_on_board(child[0],child[1],next_board)
+                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,True)
+                if myscore<minscore:
+                    best_move=child
+                    minscore=myscore
+            return best_move,minscore
+    
+    def getNextMove(self,board,game_obj,player="black",depth=4):
+        move,_=self.minmax(board,game_obj,player,depth,True)
+        print(move)
+        return move

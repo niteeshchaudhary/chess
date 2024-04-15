@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
-from helpers import RandomMove as MyAlgo
-from helpers import MinMax #as MyAlgo
-from helpers import MinMaxd1 #as MyAlgo
+from helpers import RandomMove #as MyAlgo
+from helpers import MinMax as MyAlgo
 import copy
 import time
 import threading
@@ -274,11 +273,14 @@ class AI_Game:
         king_position = self.find_king_position(self.current_player)
         self.board_squares[king_position[0]][king_position[1]].config(bg="red")
                 
+    
+    def find_king_position(self,color,board=[]):
+        if len(board)==0:
+            board=self.board
 
-    def find_king_position(self,color):
         for row in range(8):
             for col in range(8):
-                piece = self.board[row][col]
+                piece = board[row][col]
                 if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
                 
@@ -292,7 +294,7 @@ class AI_Game:
         self.board_squares[king_position[0]][king_position[1]].config(bg="#ff00ff")
 
         king_position = self.find_king_position("white")
-        self.board_squares[king_position[0]][king_position[1]].config(bg="ff00ff")
+        self.board_squares[king_position[0]][king_position[1]].config(bg="#ff00ff")
 
 
 
@@ -342,6 +344,33 @@ class AI_Game:
 
         return True
     
+    def is_checkmate_board(self, board,player,is_check):
+        king_position=self.find_king_position(player,board)
+        # Check if the king has any valid moves
+        king = board[king_position[0]][king_position[1]]
+        king_moves = king.get_possible_moves(board, king_position,is_check,game=self)
+
+        # Remove any moves that would still leave the king in check
+        valid_moves = []
+        for move in king_moves:
+            backup_board = [row[:] for row in board]
+            self.make_move_on_board(king_position, move, backup_board)
+            if not self.is_king_under_attack(move):
+                valid_moves.append(move)
+            
+        # Check if any other piece can block or capture the attacking piece
+        if valid_moves:
+            return False
+
+        for row in range(8):
+            for col in range(8):
+                piece = board[row][col]
+                if piece and piece.color == self.current_player:
+                    possible_moves = piece.get_possible_moves(self.board, (row, col),is_check,game=self)
+                    if len(possible_moves)>0: 
+                        return False
+
+    
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]
         board[end[0]][end[1]] = piece
@@ -355,7 +384,7 @@ class AI_Game:
     def move_piece(self, start, end):
         if self.current_player!="black":
             self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
-        print(self.move_labels_text)
+        print("Move label:",self.move_labels_text)
         if len(self.state) > 6:
             del self.state[0]  # Remove the oldest label from the list
 
@@ -372,9 +401,9 @@ class AI_Game:
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
         if self.current_player=="black":
-
-            opp_thread=threading.Thread(target=self.opponent_turn)
-            opp_thread.start()
+            self.opponent_turn()
+            #opp_thread=threading.Thread(target=self.opponent_turn)
+            #opp_thread.start()
 
 
     def opponent_turn(self):
@@ -385,7 +414,9 @@ class AI_Game:
             self.draw()
             return
         try:
-            current_position,next_position=self.myalgo.getNextMove(self.board,self)
+            print("Moves:",moves)
+            current_position,next_position=self.myalgo.getNextMove(self.board,self,"black")
+            print("AI: ",current_position,next_position)
             if(next_position in moves[current_position[0]*10+current_position[1]]):
                 self.move_piece(current_position,next_position)
                 self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
