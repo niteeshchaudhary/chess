@@ -3,8 +3,10 @@ import random
 class AlphaBeta:
 
     def __init__(self):
+        self.name="AlphaBeta"
         self.players={"black":"white","white":"black"}
         self.score={"pawn":10,"knight":30,"bishop":30,"rook":50,"queen":90,"king":9000}
+
 
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]
@@ -40,6 +42,7 @@ class AlphaBeta:
 
     def minmax(self,board,game_obj,player,alpha,beta,depth=2,isMaxplayer=True):
         moves=game_obj.generate_moves_list(player,board)
+        random.shuffle(moves)
         # print(moves)
 
         if depth==0:

@@ -82,7 +82,8 @@ class King:
         # Check for kingside castling
         if not self.has_moved:
             rook_col = 7 if self.color == "white" else 7
-            print(self.has_moved)
+            if self.has_moved:
+                print(self.has_moved)
             if (
                 col==4 and
                 board[row][col + 1] is None

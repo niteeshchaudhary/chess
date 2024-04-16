@@ -3,6 +3,7 @@ import random
 class MinMax:
 
     def __init__(self):
+        self.name="MinMax"
         self.players={"black":"white","white":"black"}
         self.score={"pawn":10,"knight":30,"bishop":30,"rook":50,"queen":90,"king":9000}
 
@@ -42,6 +43,7 @@ class MinMax:
     def minmax(self,board,game_obj,player,depth=2,isMaxplayer=True):
 
         moves=game_obj.generate_moves_list(player,board)
+        random.shuffle(moves)
         #print(moves)
         
 
@@ -77,7 +79,7 @@ class MinMax:
                     minscore=myscore
             return best_move,minscore
     
-    def getNextMove(self,board,game_obj,player="black",depth=4):
+    def getNextMove(self,board,game_obj,player="black",depth=3):
         move,_=self.minmax(board,game_obj,player,depth,True)
         print(move)
         return move

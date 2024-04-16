@@ -1,9 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
-from helpers import RandomMove as MyAlgo
-from helpers import MinMax #as MyAlgo_opp
-from helpers import AlphaBeta as MyAlgo_opp
+from my_algo import MyAlgo
 import copy
 import time
 import threading
@@ -17,8 +15,8 @@ class AI_Vs_AI_Game:
         self.state=[]
         self.undo=0
 
-        self.myalgo=MyAlgo_opp()
-        self.myalgo_opp=MyAlgo()
+        self.myalgo=MyAlgo("AlphaBeta").get_object()    #black
+        self.myalgo_opp=MyAlgo("MinMax_DP").get_object()  #white
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
@@ -459,19 +457,19 @@ class AI_Vs_AI_Game:
         if len(moves.keys())==0:
             self.draw()
             return
-        try:
-            current_position,next_position=self.myalgo_opp.getNextMove(board=self.board,game_obj=self,player="white")
-            print("white",current_position,next_position)
-            if(next_position in moves[current_position[0]*10+current_position[1]]):
-                self.move_piece(current_position,next_position)
-                self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
-                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
-            else:
-                self.draw()
-        except Exception as e:
-            print("Error2",e)
+        # try:
+        current_position,next_position=self.myalgo_opp.getNextMove(board=self.board,game_obj=self,player="white")
+        print("white",current_position,next_position)
+        if(next_position in moves[current_position[0]*10+current_position[1]]):
+            self.move_piece(current_position,next_position)
+            self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+            self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
+        else:
             self.draw()
-            return
+        # except Exception as e:
+        #     print("Error2",e)
+        #     self.draw()
+        #     return
 
         
     def make_move(self, move):
@@ -549,7 +547,7 @@ class AI_Vs_AI_Game:
         move_text=f"{symbol} {self.column_names[start[1]]}{start[0]+1}-{self.column_names[end[1]]}{end[0]+1}"
         self.move_labels_text.append(move_text)
         move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("Arial", 20))
-        self.history.write(f"{start[1]},{start[0]},{[end[1]]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
+        self.history.write(f"{start[1]},{start[0]},{end[1]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
 
         if self.current_player=="white":
             move_label.pack(anchor="w",padx=5)

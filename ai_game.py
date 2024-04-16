@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tokens import Rook,Knight, Bishop, King, Queen,Pawn
-from helpers import RandomMove #as MyAlgo
-from helpers import MinMax as MyAlgo
+from my_algo import MyAlgo
 import copy
 import time
 import threading
@@ -15,10 +14,20 @@ class AI_Game:
         self.master = master
         self.state=[]
         self.undo=0
+        start_algo="RandomMove"
+        self.algorithm=MyAlgo(start_algo)
 
-        self.myalgo=MyAlgo()
+        self.myalgo=self.algorithm.get_object()
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
+
+        selected_option = tk.StringVar(option_pane)
+        selected_option.set(start_algo)
+
+        # Create the dropdown menu
+        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP", "AlphaBeta", command=self.change_algo)
+        dropdown.pack()
+        # children[3].config(command=self.change_algo)
 
 
         self.move_history_frame = history_pane
@@ -61,6 +70,10 @@ class AI_Game:
                 
         # Variable to store selected piece position
         self.selected_piece = None
+
+    def change_algo(self,algo):
+        self.myalgo=self.algorithm.get_object(algo)
+
 
     def ai_choose_piece(self,position):
         piece=self.board[position[0]][position[1]]
@@ -401,12 +414,13 @@ class AI_Game:
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
         if self.current_player=="black":
-            self.opponent_turn()
-            #opp_thread=threading.Thread(target=self.opponent_turn)
-            #opp_thread.start()
+            # self.opponent_turn()
+            opp_thread=threading.Thread(target=self.opponent_turn,daemon=True)
+            opp_thread.start()
 
 
     def opponent_turn(self):
+        print(self.myalgo.name," is playing")
         if self.is_checkmate:
             return
         moves=self.generate_moves_dict()
@@ -424,6 +438,7 @@ class AI_Game:
             else:
                 self.draw()
         except Exception as e:
+            print("Error:",e)
             self.history.close()
             self.draw()
             return
@@ -504,7 +519,7 @@ class AI_Game:
         move_text=f"{symbol} {self.column_names[start[1]]}{start[0]+1}-{self.column_names[end[1]]}{end[0]+1}"
         self.move_labels_text.append(move_text)
         move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("Arial", 20))
-        self.history.write(f"{start[1]},{start[0]},{[end[1]]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
+        self.history.write(f"{start[1]},{start[0]},{end[1]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
 
         if self.current_player=="white":
             move_label.pack(anchor="w",padx=5)

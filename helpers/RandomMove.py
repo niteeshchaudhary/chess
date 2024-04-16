@@ -3,6 +3,7 @@ import random
 class RandomMove:
 
     def __init__(self):
+        self.name="RandomMove"
         pass
 
     def choose_piece(self,position):

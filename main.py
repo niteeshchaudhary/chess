@@ -89,6 +89,9 @@ def undo():
 #         Game.is_rotation_enabled=False
 #     print("hell")
 
+def on_selection_change(value):
+    print("Selected option:", value)
+
 def create_top_pane(win_obj):
     global rotation_button,undo_button
     
@@ -103,6 +106,7 @@ def create_top_pane(win_obj):
 
     undo_button = tk.Button(top_frame, text="Undo", command=undo)
     undo_button.pack(side="left", padx=10, pady=10)
+
 
     # rotation_button = tk.Button(top_frame, text="Enable Board Rotation", command=toggle_rotation)
     # rotation_button.pack(side="left", padx=10, pady=10)
