@@ -7,7 +7,7 @@ import time
 class Two_Player_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane):
 
         self.master = master
         self.state=[]

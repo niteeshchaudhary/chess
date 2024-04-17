@@ -18,6 +18,7 @@ def restart_game(win_obj):
 
     option_pane=create_top_pane(game_window)
     history_pane=create_left_pane(game_window)
+    time_pane=create_right_pane(game_window)
 
     # Set window to fullscreen
     screen_width = root.winfo_screenwidth()
@@ -25,15 +26,14 @@ def restart_game(win_obj):
     game_window.geometry(f"{screen_width}x{screen_height}")
     
     board_frame=create_center_pane(game_window)
-
     # board_frame.pack()
 
     if isinstance(game_,AI_Game):
-        game_= AI_Game(board_frame,history_pane,option_pane)
+        game_= AI_Game(board_frame,history_pane,option_pane,time_pane)
     elif isinstance(game_,AI_Vs_AI_Game):
-        game_= AI_Vs_AI_Game(board_frame,history_pane,option_pane)
+        game_= AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane)
     else:
-        game_= Two_Player_Game(board_frame,history_pane,option_pane)
+        game_= Two_Player_Game(board_frame,history_pane,option_pane,time_pane)
 
 def resign():
     global game_
@@ -113,6 +113,14 @@ def create_top_pane(win_obj):
 
     return top_frame
 
+def create_right_pane(win_obj):
+    right_frame = tk.Frame(win_obj, bg="lightblue", width=500, height=300)
+    right_frame.pack(side="right", fill="y")
+    time_text=tk.Label(right_frame, text="Time", height=1, relief="sunken", font=("Arial", 46))
+    time_text.pack(side="top",fill=tk.X)
+    right_frame.pack_propagate(0)
+    return right_frame
+
 def create_left_pane(win_obj):
     left_frame = tk.Frame(win_obj, bg="lightblue", width=200, height=400)
     left_frame.pack(side="left", fill="y")
@@ -150,6 +158,7 @@ def p2Game(gmw):
 
     option_pane=create_top_pane(game_window)
     history_pane=create_left_pane(game_window)
+    time_pane=create_right_pane(game_window)
 
     # Set window to fullscreen
     screen_width = root.winfo_screenwidth()
@@ -161,7 +170,7 @@ def p2Game(gmw):
     # board_frame.pack()
 
     
-    game_ = Two_Player_Game(board_frame,history_pane,option_pane)
+    game_ = Two_Player_Game(board_frame,history_pane,option_pane,time_pane)
 
 def ai_Game(gmw):
     global game_
@@ -173,6 +182,7 @@ def ai_Game(gmw):
 
     option_pane=create_top_pane(game_window)
     history_pane=create_left_pane(game_window)
+    time_pane=create_right_pane(game_window)
 
     # Set window to fullscreen
     screen_width = root.winfo_screenwidth()
@@ -184,7 +194,7 @@ def ai_Game(gmw):
     # board_frame.pack()
 
     
-    game_ = AI_Game(board_frame,history_pane,option_pane)
+    game_ = AI_Game(board_frame,history_pane,option_pane,time_pane)
 
 def ai_vs_ai_Game(gmw):
     global game_
@@ -196,6 +206,7 @@ def ai_vs_ai_Game(gmw):
 
     option_pane=create_top_pane(game_window)
     history_pane=create_left_pane(game_window)
+    time_pane=create_right_pane(game_window)
 
     # Set window to fullscreen
     screen_width = root.winfo_screenwidth()
@@ -207,7 +218,7 @@ def ai_vs_ai_Game(gmw):
     # board_frame.pack()
 
     
-    game_ = AI_Vs_AI_Game(board_frame,history_pane,option_pane)
+    game_ = AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane)
 
 
 def start_game():

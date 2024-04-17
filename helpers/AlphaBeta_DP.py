@@ -1,12 +1,15 @@
 import random
 from tokens import Queen 
 
-class AlphaBeta:
+class AlphaBeta_DP:
 
     def __init__(self):
         self.name="AlphaBeta"
         self.players={"black":"white","white":"black"}
         self.score={"pawn":10,"knight":30,"bishop":30,"rook":50,"queen":90,"king":9000}
+        self.count=0
+        self.mindic={}
+        self.maxdic={}
 
 
     def make_move_on_board(self, start, end, board):
@@ -58,13 +61,23 @@ class AlphaBeta:
             else:
                 return None,10000000
         best_move=random.choice(moves)
-        
+        dp_key=[""]*64
         if isMaxplayer:
             maxscore=-10000000
             for child in moves:
                 next_board= [row[:] for row in board]
-                self.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,False)
+                game_obj.make_move_on_board(child[0],child[1],next_board)
+                for i in range(8):
+                    for j in range(8):
+                        if next_board[i][j]:
+                            dp_key[i*8+j]=next_board[i][j].get_symbol()
+                
+                dp_key_tup= tuple(dp_key)
+                if dp_key_tup in self.maxdic.keys():
+                    myscore=self.maxdic[dp_key_tup]
+                else:
+                    _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,False)
+                    self.maxdic[dp_key_tup]=myscore
                 if myscore>maxscore:
                     best_move=child
                     maxscore=myscore
@@ -76,8 +89,18 @@ class AlphaBeta:
             minscore=+1000000
             for child in moves:
                 next_board= [row[:] for row in board]
-                game_obj.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,True)
+                self.make_move_on_board(child[0],child[1],next_board)
+                for i in range(8):
+                    for j in range(8):
+                        if next_board[i][j]:
+                            dp_key[i*8+j]=next_board[i][j].get_symbol()
+                dp_key_tup= tuple(dp_key)
+                if dp_key_tup in self.mindic.keys():
+                    myscore=self.mindic[dp_key_tup]
+                else:
+                    _,myscore=self.minmax(next_board,game_obj,self.players[player],alpha,beta,depth-1,True)
+                    self.mindic[dp_key_tup]=myscore
+                
                 if myscore<minscore:
                     best_move=child
                     minscore=myscore
@@ -87,6 +110,15 @@ class AlphaBeta:
             return best_move,minscore
     
     def getNextMove(self,board,game_obj,player="black",depth=4):
+        count=0
+        for i in range(8):
+            for j in range(8):
+                if board[i][j]:
+                    count+=1
+        if self.count!=count:
+            self.mindic={}
+            self.maxdic={}
+            self.count=count
         move,_=self.minmax(board,game_obj,player,-100000000,100000000,depth,True)
         print(move)
         return move

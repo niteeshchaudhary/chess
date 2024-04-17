@@ -9,21 +9,30 @@ import threading
 class AI_Vs_AI_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane):
 
         self.master = master
         self.state=[]
         self.undo=0
 
-        self.myalgo=MyAlgo("AlphaBeta").get_object()    #black
-        self.myalgo_opp=MyAlgo("MinMax_DP").get_object()  #white
+        self.myalgo_white=MyAlgo("AlphaBeta").get_object()  #white
+
+        self.myalgo_black=MyAlgo("AlphaBeta_DP").get_object()    #black
+        
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
 
         self.move_history_frame = history_pane
-
-        sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
+        time_frame=tk.Frame(time_pane)
+        time_frame.pack(fill=tk.X, expand=True)
+        self.black_time_label=tk.Label(time_frame, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
+        self.white_time_label=tk.Label(time_frame, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
+        self.black_time_label.pack(fill=tk.X, expand=True)
+        self.white_time_label.pack(fill=tk.X, expand=True)
+        self.black_time=0
+        self.white_time=0
+        # sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
 
         self.column_names={0:"a",1:"b",2:"c",3:"d",4:"e",5:"f",6:"g",7:"h"}
 
@@ -66,9 +75,9 @@ class AI_Vs_AI_Game:
         white_thread=threading.Thread(target=self.white_turn,daemon=True)
         white_thread.start()
 
-    def ai_choose_piece(self,position):
+    def ai_choose_piece(self,position,algo):
         piece=self.board[position[0]][position[1]]
-        inp=self.myalgo.choose_piece(position)
+        inp=algo.choose_piece(position)
         if inp == "rook":
             self.board[position[0]][position[1]]=Rook(piece.color)
         elif inp == "bishop":
@@ -80,35 +89,6 @@ class AI_Vs_AI_Game:
 
         self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
 
-    def choose_piece(self,position):
-        piece=self.board[position[0]][position[1]]
-        # Function to set the selected inp and close the dialog
-        def set_inp(p):
-            inp = p
-            inp = inp.lower()  # Convert input to lowercase for case-insensitive comparison
-            if inp == "rook":
-                self.board[position[0]][position[1]]=Rook(piece.color)
-            elif inp == "bishop":
-                self.board[position[0]][position[1]]=Bishop(piece.color)
-            elif inp == "knight":
-                self.board[position[0]][position[1]]=Knight(piece.color)
-            else:
-                self.board[position[0]][position[1]]=Queen(piece.color)
-
-            self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
-            print("You chose:", inp)
-            dialog.destroy()
-
-        # Create a dialog box
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Choose Chess piece")
-        buttons_text = ["Rook", "Bishop", "Knight",  "Queen"]
-        tk.Button(dialog, text=buttons_text[0],width=10, height=2,  command=lambda: set_inp(buttons_text[0])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[1],width=10, height=2,  command=lambda: set_inp(buttons_text[1])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[2],width=10, height=2,  command=lambda: set_inp(buttons_text[2])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[3],width=10, height=2,  command=lambda: set_inp(buttons_text[3])).pack(padx=5, pady=5)
-        self.master.wait_window(dialog)
-        
 
     def setup_board(self):
         board = [[None for _ in range(8)] for _ in range(8)]
@@ -139,7 +119,7 @@ class AI_Vs_AI_Game:
         for row in range(8):
             row_squares = []
             for col in range(8):
-                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("Arial", 46))
+                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("Arial", 48))
                 square.grid(row=row, column=col)
                 row_squares.append(square)
             squares.append(row_squares)
@@ -178,73 +158,18 @@ class AI_Vs_AI_Game:
                     self.board_squares[row][col].config(text=piece_symbol)                   
 
     def on_square_clicked(self, row, col):
-        if self.is_checkmate or self.current_player=="black":
-            return
         piece = self.board[row][col]
 
         if piece:
             if self.selected_piece is None:
-                if piece.color==self.current_player:
+                    self.clear_highlighting()
                     # Highlight possible moves for the selected piece
                     possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, game=self)
                     self.highlight_possible_moves(possible_moves)
                     self.board_squares[row][col].config(bg="orange")
-                    self.selected_piece = (row, col)
-                else:
-                    self.clear_highlighting()
-                    self.board_squares[row][col].config(bg="orange")
-                    return
-
-            else:
-                # Move the selected piece to the clicked square
-                print( "selected: ",self.selected_piece)
-                prev_piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
-                possible_moves=prev_piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                if (row, col) in possible_moves:
-                    # moving on oppenents piece
-                    print("Move piece")
-                    self.clear_highlighting()
-                    self.move_piece(self.selected_piece, (row, col))
-                    past=self.selected_piece
-                    self.selected_piece = None
-                    print("currrr",self.current_player)
-                    self.board_squares[past[0]][past[1]].config(bg="purple")
-                    self.board_squares[row][col].config(bg="#FF00FF") 
-                else:
-                    print( "choose diff: ",self.selected_piece)
-                    if piece.color==self.current_player:
-                        print( "choose diff:-> ",piece.color,self.current_player)
-                        self.selected_piece = None
-                        self.clear_highlighting()
-                        self.selected_piece = (row, col)
-                        piece = self.board[row][col]
-                        possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                        self.highlight_possible_moves(possible_moves)
-                        self.board_squares[row][col].config(bg="orange")
-                        self.selected_piece = (row, col)
-                    else:
-                        self.clear_highlighting()
-                        self.board_squares[row][col].config(bg="orange")
-                        return
-
         else:
-            if self.selected_piece:
-                piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
-                possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                if (row, col) in possible_moves:
-                    # moving in empty space
-                    print("Move piece 000")
-                    self.clear_highlighting()
-                    self.move_piece(self.selected_piece, (row, col))
-                    past=self.selected_piece
-                    self.selected_piece = None
-                    self.board_squares[past[0]][past[1]].config(bg="purple")
-                    self.board_squares[row][col].config(bg="pink")
-                    print("currrr yemp",self.current_player)
-                    # self.board_squares[past[0]][past[1]].config(bg="purple")
-                    # self.board_squares[row][col].config(bg="#FF00FF")
-                else:
-                    self.clear_highlighting()
+            self.clear_highlighting()
+
 
     def highlight_possible_moves(self, moves):
         for row in range(8):
@@ -431,12 +356,13 @@ class AI_Vs_AI_Game:
     def opponent_turn(self):
         if self.is_checkmate:
             return
+        t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:
             self.draw()
             return
         # try:
-        current_position,next_position=self.myalgo.getNextMove(board=self.board,game_obj=self,player="black")
+        current_position,next_position=self.myalgo_black.getNextMove(board=self.board,game_obj=self,player="black")
         print("black",current_position,next_position)
         if(next_position in moves[current_position[0]*10+current_position[1]]):
             self.move_piece(current_position,next_position)
@@ -444,6 +370,8 @@ class AI_Vs_AI_Game:
             self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
         else:
             self.draw()
+        self.black_time+=time.time()-t1
+        self.black_time_label.config(text=str(int(self.black_time)))
         # except Exception as e:
         #     print("Error 1:",e)
         #     self.draw()
@@ -453,12 +381,13 @@ class AI_Vs_AI_Game:
         if self.is_checkmate:
             return
         self.clear_highlighting()
+        t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:
             self.draw()
             return
         # try:
-        current_position,next_position=self.myalgo_opp.getNextMove(board=self.board,game_obj=self,player="white")
+        current_position,next_position=self.myalgo_white.getNextMove(board=self.board,game_obj=self,player="white")
         print("white",current_position,next_position)
         if(next_position in moves[current_position[0]*10+current_position[1]]):
             self.move_piece(current_position,next_position)
@@ -466,6 +395,8 @@ class AI_Vs_AI_Game:
             self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
         else:
             self.draw()
+        self.white_time+=time.time()-t1
+        self.white_time_label.config(text=str(int(self.white_time)))
         # except Exception as e:
         #     print("Error2",e)
         #     self.draw()
@@ -493,10 +424,10 @@ class AI_Vs_AI_Game:
                     self.board[start_position[0]][position[1]]=None
                     self.board_squares[start_position[0]][position[1]].config(text="")
                 elif position[0] == 0 or position[0] == 7:
-                    if self.current_player=="white":#have already changed the current player
-                        self.ai_choose_piece(position)
+                    if self.current_player=="white": #player already changed
+                        self.ai_choose_piece(position,self.myalgo_black)
                     else:
-                        self.choose_piece(position)
+                        self.ai_choose_piece(position,self.myalgo_white)
                     
 
 

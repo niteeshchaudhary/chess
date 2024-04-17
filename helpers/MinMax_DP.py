@@ -1,5 +1,4 @@
 import random
-import numpy as np
 
 class MinMax_DP:
 
@@ -61,7 +60,7 @@ class MinMax_DP:
                 return None,10000000
         
         best_move=random.choice(moves)
-        dp_key=np.zeros(64)
+        dp_key=[""]*64
         if isMaxplayer:
             maxscore=-10000000
             for child in moves:
@@ -70,13 +69,15 @@ class MinMax_DP:
                 for i in range(8):
                     for j in range(8):
                         if next_board[i][j]:
-                            dp_key[i*8+j]=1
-                dp_key_int= dp_key.dot(1 << np.arange(dp_key.size)[::-1])
-                if dp_key_int in self.maxdic.keys():
-                    myscore=self.maxdic[dp_key_int]
+                            dp_key[i*8+j]=next_board[i][j].get_symbol()
+                dp_key_tup= tuple(dp_key)
+
+                if dp_key_tup in self.maxdic.keys():
+                    print(dp_key_tup)
+                    myscore=self.maxdic[dp_key_tup]
                 else:
                     _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,False)
-                    self.maxdic[dp_key_int]=myscore
+                    self.maxdic[dp_key_tup]=myscore
                 if myscore>maxscore:
                     best_move=child
                     maxscore=myscore
@@ -89,27 +90,28 @@ class MinMax_DP:
                 for i in range(8):
                     for j in range(8):
                         if next_board[i][j]:
-                            dp_key[i*8+j]=1
-                dp_key_int= dp_key.dot(1 << np.arange(dp_key.size)[::-1])
-                if dp_key_int in self.mindic.keys():
-                    myscore=self.mindic[dp_key_int]
+                            dp_key[i*8+j]=next_board[i][j].get_symbol()
+                dp_key_tup= tuple(dp_key)
+                if dp_key_tup in self.mindic.keys():
+                    myscore=self.mindic[dp_key_tup]
                 else:
                     _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,True)
-                    self.mindic[dp_key.dot(1 << np.arange(dp_key.size)[::-1])]=myscore
+                    self.mindic[dp_key_tup]=myscore
                 if myscore<minscore:
                     best_move=child
                     minscore=myscore
             return best_move,minscore
     
-    def getNextMove(self,board,game_obj,player="black",depth=5):
-        # count=0
-        # for i in range(8):
-        #     for j in range(8):
-        #         if board[i][j]:
-        #             count+=1
-        # if self.count!=count:
-        #     self.dic={}
-        #     self.count=count
+    def getNextMove(self,board,game_obj,player="black",depth=4):
+        count=0
+        for i in range(8):
+            for j in range(8):
+                if board[i][j]:
+                    count+=1
+        if self.count!=count:
+            self.mindic={}
+            self.maxdic={}
+            self.count=count
         move,_=self.minmax(board,game_obj,player,depth,True)
         print(move)
         return move

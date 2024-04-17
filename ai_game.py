@@ -9,7 +9,7 @@ import threading
 class AI_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane):
 
         self.master = master
         self.state=[]
@@ -25,7 +25,7 @@ class AI_Game:
         selected_option.set(start_algo)
 
         # Create the dropdown menu
-        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP", "AlphaBeta", command=self.change_algo)
+        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP", command=self.change_algo)
         dropdown.pack()
         # children[3].config(command=self.change_algo)
 
@@ -33,6 +33,14 @@ class AI_Game:
         self.move_history_frame = history_pane
 
         sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
+
+        self.black_time_label=tk.Label(time_pane, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
+        self.white_time_label=tk.Label(time_pane, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
+        self.black_time_label.pack(side="top",fill=tk.X, expand=True)
+        self.white_time_label.pack(side="bottom",fill=tk.X, expand=True)
+        self.black_time=0
+        self.white_time=0
+        self.time_start=time.time()
 
         self.column_names={0:"a",1:"b",2:"c",3:"d",4:"e",5:"f",6:"g",7:"h"}
 
@@ -413,6 +421,8 @@ class AI_Game:
         self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
+        self.white_time+=time.time()-self.time_start
+        self.white_time_label.config(text=str(int(self.white_time)))
         if self.current_player=="black":
             # self.opponent_turn()
             opp_thread=threading.Thread(target=self.opponent_turn,daemon=True)
@@ -423,6 +433,8 @@ class AI_Game:
         print(self.myalgo.name," is playing")
         if self.is_checkmate:
             return
+        
+        t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:
             self.draw()
@@ -442,6 +454,10 @@ class AI_Game:
             self.history.close()
             self.draw()
             return
+        
+        self.black_time+=time.time()-t1
+        self.black_time_label.config(text=str(int(self.black_time)))
+        self.time_start=time.time()
 
         
     def make_move(self, move):
