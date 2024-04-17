@@ -18,6 +18,8 @@ class MyAlgo:
             self.hp = hp.AlphaBeta_DP_BinHash()
         elif name=="AlphaBeta_DP":
             self.hp = hp.AlphaBeta_DP()
+        elif name=="MyBot":
+            self.hp = hp.MyBot()
 
     def get_object(self,name=""):
         if name != "":
@@ -37,5 +39,7 @@ class MyAlgo:
                 self.hp = hp.AlphaBeta_DP_BinHash()
             elif name=="AlphaBeta_DP":
                 self.hp = hp.AlphaBeta_DP()
+            elif name=="MyBot":
+                self.hp = hp.MyBot()
 
         return self.hp

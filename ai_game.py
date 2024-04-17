@@ -25,14 +25,11 @@ class AI_Game:
         selected_option.set(start_algo)
 
         # Create the dropdown menu
-        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP", command=self.change_algo)
+        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot", command=self.change_algo)
         dropdown.pack()
-        # children[3].config(command=self.change_algo)
 
 
         self.move_history_frame = history_pane
-
-        sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
 
         self.black_time_label=tk.Label(time_pane, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
         self.white_time_label=tk.Label(time_pane, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
@@ -40,7 +37,7 @@ class AI_Game:
         self.white_time_label.pack(side="bottom",fill=tk.X, expand=True)
         self.black_time=0
         self.white_time=0
-        self.time_start=time.time()
+        
 
         self.column_names={0:"a",1:"b",2:"c",3:"d",4:"e",5:"f",6:"g",7:"h"}
 
@@ -75,6 +72,8 @@ class AI_Game:
                 self.board_squares[row][col].bind("<Button-1>", lambda event, row=row, col=col: self.on_square_clicked(row, col))
 
         self.rotate_board()
+
+        self.time_start=time.time()
                 
         # Variable to store selected piece position
         self.selected_piece = None

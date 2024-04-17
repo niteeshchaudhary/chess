@@ -9,15 +9,15 @@ import threading
 class AI_Vs_AI_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane,time_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane,algo1,algo2):
 
         self.master = master
         self.state=[]
         self.undo=0
 
-        self.myalgo_white=MyAlgo("AlphaBeta").get_object()  #white
+        self.myalgo_white=MyAlgo(algo1).get_object()  #white
 
-        self.myalgo_black=MyAlgo("AlphaBeta_DP").get_object()    #black
+        self.myalgo_black=MyAlgo(algo2).get_object()    #black
         
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
@@ -356,6 +356,7 @@ class AI_Vs_AI_Game:
     def opponent_turn(self):
         if self.is_checkmate:
             return
+        print(self.myalgo_black.name," is playing")
         t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:
@@ -381,6 +382,7 @@ class AI_Vs_AI_Game:
         if self.is_checkmate:
             return
         self.clear_highlighting()
+        print(self.myalgo_white.name," is playing")
         t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:

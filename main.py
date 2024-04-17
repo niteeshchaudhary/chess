@@ -31,7 +31,7 @@ def restart_game(win_obj):
     if isinstance(game_,AI_Game):
         game_= AI_Game(board_frame,history_pane,option_pane,time_pane)
     elif isinstance(game_,AI_Vs_AI_Game):
-        game_= AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane)
+        game_= select_AI(board_frame,history_pane,option_pane,time_pane)
     else:
         game_= Two_Player_Game(board_frame,history_pane,option_pane,time_pane)
 
@@ -196,7 +196,46 @@ def ai_Game(gmw):
     
     game_ = AI_Game(board_frame,history_pane,option_pane,time_pane)
 
-def ai_vs_ai_Game(gmw):
+def select_AI(gmw):
+    global game_
+    gmw.destroy()
+    root.withdraw()
+    game_window = tk.Toplevel()
+    game_window.title("Select AI")
+    game_window.protocol("WM_DELETE_WINDOW", exit_game)
+
+    center_frame=tk.Frame(game_window)
+    center_frame.pack(expand=True, fill="both",pady=200)
+
+
+    start_algo1="RandomMove"
+    start_algo2="RandomMove"
+
+    selected_option1 = tk.StringVar(center_frame)
+    selected_option1.set(start_algo1)
+
+    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown1.pack(pady=10)
+
+
+    selected_option2 = tk.StringVar(center_frame)
+    selected_option2.set(start_algo2)
+
+    # Create the dropdown menu
+    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown2.pack(pady=10)
+
+    button = tk.Button(center_frame, text="Continue", command=lambda:ai_vs_ai_Game(game_window,selected_option1.get(),selected_option2.get()), width=20, height=2)
+    button.pack(pady=10)
+
+
+    # Set window to fullscreen
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    game_window.geometry(f"{screen_width}x{screen_height}")
+    
+
+def ai_vs_ai_Game(gmw,algo1,algo2):
     global game_
     gmw.destroy()
     root.withdraw()
@@ -218,7 +257,7 @@ def ai_vs_ai_Game(gmw):
     # board_frame.pack()
 
     
-    game_ = AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane)
+    game_ = AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane,algo1,algo2)
 
 
 def start_game():
@@ -249,7 +288,7 @@ def start_game():
     button = tk.Button(button_frame, text=buttons[2],command=lambda:ai_Game(game_window), width=20, height=2)
     button.pack(pady=10)
 
-    button = tk.Button(button_frame, text=buttons[3],command=lambda:ai_vs_ai_Game(game_window), width=20, height=2)
+    button = tk.Button(button_frame, text=buttons[3],command=lambda:select_AI(game_window), width=20, height=2)
     button.pack(pady=10)
 
     button = tk.Button(button_frame, text=buttons[4], width=20, height=2)
