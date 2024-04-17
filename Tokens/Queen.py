@@ -2,6 +2,7 @@ class Queen:
     def __init__(self, color):
         self.name="queen"
         self.color = color
+        self.has_moved = False
 
     def get_symbol(self):
         if self.color == "white":

@@ -2,6 +2,7 @@ class Pawn:
     def __init__(self, color):
         self.name="pawn"
         self.color = color
+        self.has_moved = False
         self.direction = 1 if color == "white" else -1
         self.en_passant_target=None
         

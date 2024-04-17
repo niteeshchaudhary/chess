@@ -51,7 +51,7 @@ class King:
 
         # Check for castling
         if not is_check:
-            castle_moves=self.get_castling_moves(board, position,possible_moves)
+            castle_moves=self.get_castling_moves(board, position)
         
         # self.validate_moves()
 
@@ -64,7 +64,7 @@ class King:
         
         if len(castle_moves)>0:
             for move in castle_moves:
-                print((move[0],move[1]-1),(move[0],move[1]-1) in  valid_moves,(move[0],move[1]+1),(move[0],move[1]+1) in  valid_moves,valid_moves)
+                # print(("king",move[0],move[1]-1),(move[0],move[1]-1) in  valid_moves,(move[0],move[1]+1),(move[0],move[1]+1) in  valid_moves,valid_moves)
                 if ( (move[0],move[1]-1) in  valid_moves) or (  (move[0],move[1]+1) in  valid_moves):
                     backup_board = [row[:] for row in board]
                     game.make_move_on_board(position, move, backup_board)
@@ -75,14 +75,17 @@ class King:
         return valid_moves
 
 
-    def get_castling_moves(self, board, position,possible_moves):
+    def get_castling_moves(self, board, position):
         castling_moves = []
         row, col = position
 
         # Check for kingside castling
         if not self.has_moved:
             rook_col = 7 if self.color == "white" else 7
+            if self.has_moved:
+                print(self.has_moved)
             if (
+                col==4 and
                 board[row][col + 1] is None
                 and board[row][col + 2] is None
                 and board[row][rook_col] is not None
@@ -95,6 +98,7 @@ class King:
         if not self.has_moved:
             rook_col = 0 if self.color == "white" else 0
             if (
+                col==4 and
                 board[row][col - 1] is None
                 and board[row][col - 2] is None
                 and board[row][col - 3] is None

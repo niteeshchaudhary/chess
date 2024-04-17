@@ -6,38 +6,33 @@ import copy
 import time
 import threading
 
-class AI_Game:
+class AI_Vs_AI_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane,time_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane,algo1,algo2):
 
         self.master = master
         self.state=[]
         self.undo=0
-        start_algo="RandomMove"
-        self.algorithm=MyAlgo(start_algo)
 
-        self.myalgo=self.algorithm.get_object()
+        self.myalgo_white=MyAlgo(algo1).get_object()  #white
+
+        self.myalgo_black=MyAlgo(algo2).get_object()    #black
+        
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
-        selected_option = tk.StringVar(option_pane)
-        selected_option.set(start_algo)
-
-        # Create the dropdown menu
-        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot", command=self.change_algo)
-        dropdown.pack()
-
 
         self.move_history_frame = history_pane
-
-        self.black_time_label=tk.Label(time_pane, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
-        self.white_time_label=tk.Label(time_pane, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
-        self.black_time_label.pack(side="top",fill=tk.X, expand=True)
-        self.white_time_label.pack(side="bottom",fill=tk.X, expand=True)
+        time_frame=tk.Frame(time_pane)
+        time_frame.pack(fill=tk.X, expand=True)
+        self.black_time_label=tk.Label(time_frame, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
+        self.white_time_label=tk.Label(time_frame, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
+        self.black_time_label.pack(fill=tk.X, expand=True)
+        self.white_time_label.pack(fill=tk.X, expand=True)
         self.black_time=0
         self.white_time=0
-        
+        # sq = tk.Label(self.master, text="Y", bg="red", width=2, height=1, relief="sunken", font=("Arial", 46))
 
         self.column_names={0:"a",1:"b",2:"c",3:"d",4:"e",5:"f",6:"g",7:"h"}
 
@@ -47,6 +42,7 @@ class AI_Game:
 
         # self.master_win.title("Chess Game")
         self.current_player="white"
+        
 
         self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("Arial", 16), bg="lightblue", bd=0)
         self.current_player_label.pack(pady=20)
@@ -72,19 +68,16 @@ class AI_Game:
                 self.board_squares[row][col].bind("<Button-1>", lambda event, row=row, col=col: self.on_square_clicked(row, col))
 
         self.rotate_board()
-
-        self.time_start=time.time()
                 
         # Variable to store selected piece position
         self.selected_piece = None
 
-    def change_algo(self,algo):
-        self.myalgo=self.algorithm.get_object(algo)
+        white_thread=threading.Thread(target=self.white_turn,daemon=True)
+        white_thread.start()
 
-
-    def ai_choose_piece(self,position):
+    def ai_choose_piece(self,position,algo):
         piece=self.board[position[0]][position[1]]
-        inp=self.myalgo.choose_piece(position)
+        inp=algo.choose_piece(position)
         if inp == "rook":
             self.board[position[0]][position[1]]=Rook(piece.color)
         elif inp == "bishop":
@@ -96,35 +89,6 @@ class AI_Game:
 
         self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
 
-    def choose_piece(self,position):
-        piece=self.board[position[0]][position[1]]
-        # Function to set the selected inp and close the dialog
-        def set_inp(p):
-            inp = p
-            inp = inp.lower()  # Convert input to lowercase for case-insensitive comparison
-            if inp == "rook":
-                self.board[position[0]][position[1]]=Rook(piece.color)
-            elif inp == "bishop":
-                self.board[position[0]][position[1]]=Bishop(piece.color)
-            elif inp == "knight":
-                self.board[position[0]][position[1]]=Knight(piece.color)
-            else:
-                self.board[position[0]][position[1]]=Queen(piece.color)
-
-            self.board_squares[position[0]][position[1]].config(text=self.board[position[0]][position[1]].get_symbol())
-            print("You chose:", inp)
-            dialog.destroy()
-
-        # Create a dialog box
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Choose Chess piece")
-        buttons_text = ["Rook", "Bishop", "Knight",  "Queen"]
-        tk.Button(dialog, text=buttons_text[0],width=10, height=2,  command=lambda: set_inp(buttons_text[0])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[1],width=10, height=2,  command=lambda: set_inp(buttons_text[1])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[2],width=10, height=2,  command=lambda: set_inp(buttons_text[2])).pack(padx=5, pady=5)
-        tk.Button(dialog, text=buttons_text[3],width=10, height=2,  command=lambda: set_inp(buttons_text[3])).pack(padx=5, pady=5)
-        self.master.wait_window(dialog)
-        
 
     def setup_board(self):
         board = [[None for _ in range(8)] for _ in range(8)]
@@ -137,6 +101,15 @@ class AI_Game:
         board[7] = [Rook("black"), Knight("black"), Bishop("black"), Queen("black"), King("black"), Bishop("black"), Knight("black"), Rook("black")]
         board[6] = [Pawn("black") for _ in range(8)]
 
+        # custom_board = [[Rook("white"), None, Bishop("white"), Queen("white"), King("white"), Bishop("white"), Knight("white"), Rook("white")],
+        #          [None,Pawn("white"),Pawn("white"),Pawn("white"),Pawn("white"),Pawn("white"),None,Pawn("white")],
+        #          [None,None,Knight("white"),None,None,None,None,None],
+        #          [Pawn("white"),None,None,None,None,None,None,None],
+        #          [None,None,Pawn("black"),None,None,None,Pawn("white"),None],
+        #          [None,None,None,Pawn("black"),None,Pawn("black"),None,None],
+        #          [Pawn("black"),Pawn("black"),None,None,Pawn("black"),None,Pawn("black"),Pawn("black")],
+        #          [Rook("black"), Knight("black"), Bishop("black"), Queen("black"), King("black"), Bishop("black"), Knight("black"), Rook("black")]]
+
         return board
     
     
@@ -146,7 +119,7 @@ class AI_Game:
         for row in range(8):
             row_squares = []
             for col in range(8):
-                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("Arial", 46))
+                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("Arial", 48))
                 square.grid(row=row, column=col)
                 row_squares.append(square)
             squares.append(row_squares)
@@ -163,7 +136,7 @@ class AI_Game:
                 else:
                     square.grid(row=row, column=col)
 
-        if AI_Game.is_rotation_enabled and self.current_orientation== "normal":
+        if AI_Vs_AI_Game.is_rotation_enabled and self.current_orientation== "normal":
             self.current_orientation="rotated"
         else:
             self.current_orientation= "normal"
@@ -185,73 +158,18 @@ class AI_Game:
                     self.board_squares[row][col].config(text=piece_symbol)                   
 
     def on_square_clicked(self, row, col):
-        if self.is_checkmate or self.current_player=="black":
-            return
         piece = self.board[row][col]
 
         if piece:
             if self.selected_piece is None:
-                if piece.color==self.current_player:
+                    self.clear_highlighting()
                     # Highlight possible moves for the selected piece
                     possible_moves = piece.get_possible_moves(self.board, (row, col), self.is_check, game=self)
                     self.highlight_possible_moves(possible_moves)
                     self.board_squares[row][col].config(bg="orange")
-                    self.selected_piece = (row, col)
-                else:
-                    self.clear_highlighting()
-                    self.board_squares[row][col].config(bg="orange")
-                    return
-
-            else:
-                # Move the selected piece to the clicked square
-                print( "selected: ",self.selected_piece)
-                prev_piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
-                possible_moves=prev_piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                if (row, col) in possible_moves:
-                    # moving on oppenents piece
-                    print("Move piece")
-                    self.clear_highlighting()
-                    self.move_piece(self.selected_piece, (row, col))
-                    past=self.selected_piece
-                    self.selected_piece = None
-                    print("currrr",self.current_player)
-                    self.board_squares[past[0]][past[1]].config(bg="purple")
-                    self.board_squares[row][col].config(bg="#FF00FF") 
-                else:
-                    print( "choose diff: ",self.selected_piece)
-                    if piece.color==self.current_player:
-                        print( "choose diff:-> ",piece.color,self.current_player)
-                        self.selected_piece = None
-                        self.clear_highlighting()
-                        self.selected_piece = (row, col)
-                        piece = self.board[row][col]
-                        possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                        self.highlight_possible_moves(possible_moves)
-                        self.board_squares[row][col].config(bg="orange")
-                        self.selected_piece = (row, col)
-                    else:
-                        self.clear_highlighting()
-                        self.board_squares[row][col].config(bg="orange")
-                        return
-
         else:
-            if self.selected_piece:
-                piece = self.board[self.selected_piece[0]][self.selected_piece[1]]
-                possible_moves=piece.get_possible_moves(self.board, self.selected_piece, self.is_check, game=self)
-                if (row, col) in possible_moves:
-                    # moving in empty space
-                    print("Move piece 000")
-                    self.clear_highlighting()
-                    self.move_piece(self.selected_piece, (row, col))
-                    past=self.selected_piece
-                    self.selected_piece = None
-                    self.board_squares[past[0]][past[1]].config(bg="purple")
-                    self.board_squares[row][col].config(bg="pink")
-                    print("currrr yemp",self.current_player)
-                    # self.board_squares[past[0]][past[1]].config(bg="purple")
-                    # self.board_squares[row][col].config(bg="#FF00FF")
-                else:
-                    self.clear_highlighting()
+            self.clear_highlighting()
+
 
     def highlight_possible_moves(self, moves):
         for row in range(8):
@@ -293,16 +211,16 @@ class AI_Game:
         king_position = self.find_king_position(self.current_player)
         self.board_squares[king_position[0]][king_position[1]].config(bg="red")
                 
-    
+
     def find_king_position(self,color,board=[]):
         if len(board)==0:
             board=self.board
-
         for row in range(8):
             for col in range(8):
                 piece = board[row][col]
                 if piece and isinstance(piece, King) and piece.color == color:
                     return (row, col)
+                
                 
     def draw(self):
         for row in range(8):
@@ -364,10 +282,12 @@ class AI_Game:
 
         return True
     
-    def is_checkmate_board(self, board,player,is_check):
+
+    def is_checkmate_board(self, board,player):
         king_position=self.find_king_position(player,board)
         # Check if the king has any valid moves
         king = board[king_position[0]][king_position[1]]
+        is_check= self.is_king_under_attack(king_position,board)
         king_moves = king.get_possible_moves(board, king_position,is_check,game=self)
 
         # Remove any moves that would still leave the king in check
@@ -390,6 +310,7 @@ class AI_Game:
                     if len(possible_moves)>0: 
                         return False
 
+        return True
     
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]
@@ -402,9 +323,12 @@ class AI_Game:
                 self.board_squares[row][col].config(bg=self.get_square_color(row, col))
         
     def move_piece(self, start, end):
+        if self.is_checkmate:
+            return
+         
         if self.current_player!="black":
             self.state.append((copy.deepcopy(self.board),self.current_player,self.en_passant_target,self.is_check,self.is_checkmate,self.move_labels_text[:]))
-        print("Move label:",self.move_labels_text)
+        print("MoveLabel:",self.move_labels_text)
         if len(self.state) > 6:
             del self.state[0]  # Remove the oldest label from the list
 
@@ -420,43 +344,65 @@ class AI_Game:
         self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
-        self.white_time+=time.time()-self.time_start
-        self.white_time_label.config(text=str(int(self.white_time)))
+        time.sleep(0.5)
         if self.current_player=="black":
-            # self.opponent_turn()
             opp_thread=threading.Thread(target=self.opponent_turn,daemon=True)
             opp_thread.start()
+        elif self.current_player=="white":
+            white_thread=threading.Thread(target=self.white_turn,daemon=True)
+            white_thread.start()
 
 
     def opponent_turn(self):
-        print(self.myalgo.name," is playing")
         if self.is_checkmate:
             return
-        
+        print(self.myalgo_black.name," is playing")
         t1=time.time()
         moves=self.generate_moves_dict()
         if len(moves.keys())==0:
             self.draw()
             return
-        try:
-            print("Moves:",moves)
-            current_position,next_position=self.myalgo.getNextMove(self.board,self,"black")
-            print("AI: ",current_position,next_position)
-            if(next_position in moves[current_position[0]*10+current_position[1]]):
-                self.move_piece(current_position,next_position)
-                self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
-                self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF") 
-            else:
-                self.draw()
-        except Exception as e:
-            print("Error:",e)
-            self.history.close()
+        # try:
+        current_position,next_position=self.myalgo_black.getNextMove(board=self.board,game_obj=self,player="black")
+        print("black",current_position,next_position)
+        if(next_position in moves[current_position[0]*10+current_position[1]]):
+            self.move_piece(current_position,next_position)
+            self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+            self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
+        else:
             self.draw()
-            return
-        
         self.black_time+=time.time()-t1
         self.black_time_label.config(text=str(int(self.black_time)))
-        self.time_start=time.time()
+        # except Exception as e:
+        #     print("Error 1:",e)
+        #     self.draw()
+        #     return 
+    
+    def white_turn(self):
+        if self.is_checkmate:
+            return
+        self.clear_highlighting()
+        print(self.myalgo_white.name," is playing")
+        t1=time.time()
+        moves=self.generate_moves_dict()
+        if len(moves.keys())==0:
+            self.draw()
+            return
+        # try:
+        current_position,next_position=self.myalgo_white.getNextMove(board=self.board,game_obj=self,player="white")
+        print("white",current_position,next_position)
+        if(next_position in moves[current_position[0]*10+current_position[1]]):
+            self.move_piece(current_position,next_position)
+            self.board_squares[current_position[0]][current_position[1]].config(bg="purple")
+            self.board_squares[next_position[0]][next_position[1]].config(bg="#FF00FF")
+        else:
+            self.draw()
+        self.white_time+=time.time()-t1
+        self.white_time_label.config(text=str(int(self.white_time)))
+        # except Exception as e:
+        #     print("Error2",e)
+        #     self.draw()
+        #     return
 
         
     def make_move(self, move):
@@ -480,10 +426,10 @@ class AI_Game:
                     self.board[start_position[0]][position[1]]=None
                     self.board_squares[start_position[0]][position[1]].config(text="")
                 elif position[0] == 0 or position[0] == 7:
-                    if self.current_player=="white":#have already changed the current player
-                        self.ai_choose_piece(position)
+                    if self.current_player=="white": #player already changed
+                        self.ai_choose_piece(position,self.myalgo_black)
                     else:
-                        self.choose_piece(position)
+                        self.ai_choose_piece(position,self.myalgo_white)
                     
 
 
@@ -567,7 +513,7 @@ class AI_Game:
             for j in range(8):
                 if myboard[i][j] and myboard[i][j].color==player:
                     for mv in myboard[i][j].get_possible_moves(myboard,(i,j),self.is_check,self):
-                        moves.append([(i,j),mv])
+                        moves.append(((i,j),mv))
 
         return moves
 
@@ -576,5 +522,5 @@ class AI_Game:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    game = AI_Game(root)
+    game = AI_Vs_AI_Game(root)
     root.mainloop()

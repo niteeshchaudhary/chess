@@ -1,18 +1,13 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-from tokens.Rook import Rook
-from tokens.Knight import Knight
-from tokens.Bishop import Bishop
-from tokens.King import King
-from tokens.Queen import Queen
-from tokens.Pawn import Pawn
+from tokens import Rook,Knight, Bishop, King, Queen,Pawn
 import copy
 import time
 
 class Two_Player_Game:
     is_rotation_enabled = False
     
-    def __init__(self, master,history_pane,option_pane):
+    def __init__(self, master,history_pane,option_pane,time_pane):
 
         self.master = master
         self.state=[]
@@ -38,6 +33,17 @@ class Two_Player_Game:
         self.current_player_label.pack(pady=20)
 
         self.current_orientation = 'normal'  # or 'normal' for default, 'rotated' for rotated
+
+        time_frame=tk.Frame(time_pane)
+        time_frame.pack(fill=tk.X, expand=True)
+        self.black_time_label=tk.Label(time_frame, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
+        self.white_time_label=tk.Label(time_frame, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
+        self.black_time_label.pack(fill=tk.X, expand=True)
+        self.white_time_label.pack(fill=tk.X, expand=True)
+        self.black_time=0
+        self.white_time=0
+        self.time_start_u1=time.time()
+        self.time_start_u2=time.time()
         
 
 
@@ -342,6 +348,16 @@ class Two_Player_Game:
         self.add_move_to_history(move,piece.get_symbol())
         self.make_move(move)
         self.current_player_label.config(text="Player Turn: "+self.current_player)
+
+        if self.current_player=="black":
+            self.white_time+=time.time()-self.time_start_u1
+            self.white_time_label.config(text=str(int(self.white_time)))
+            self.time_start_u2=time.time()
+        else:
+            self.black_time+=time.time()-self.time_start_u2
+            self.black_time_label.config(text=str(int(self.black_time)))
+            self.time_start_u1=time.time()
+
 
 
         
