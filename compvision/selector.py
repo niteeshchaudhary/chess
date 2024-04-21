@@ -53,7 +53,7 @@ def getSelection():
     root.overrideredirect(True)
     width = root.winfo_screenwidth()
     height = root.winfo_screenheight()
-    root.geometry('%dx%d+%d+%d' % (width+10, height, -10, 0))
+    root.geometry('%dx%d+%d+%d' % (width, height, 0, 0))
     app = Selector(root)
     app.pack()
     root.attributes('-alpha', 0.5)

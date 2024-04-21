@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the image
-image_path = 'images/11.jpg'
+image_path = 'boardimages/2.png'
 image = cv2.imread(image_path)
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
