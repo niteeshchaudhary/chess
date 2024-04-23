@@ -86,7 +86,7 @@ class AlphaBeta:
                     break
             return best_move,minscore
     
-    def getNextMove(self,board,game_obj,player="black",depth=4):
+    def getNextMove(self,board,game_obj,player="black",depth=3):
         move,_=self.minmax(board,game_obj,player,-100000000,100000000,depth,True)
         print(move)
         return move

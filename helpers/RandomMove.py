@@ -10,15 +10,15 @@ class RandomMove:
         options=['queen']*30+['rook']*15+['bishop']*5+['knight']*10
         return random.choice(options)
     
-    def generate_moves_dict(self,player,board):
-        moves={}
-        for i in range(8):
-            for j in range(8):
-                if board[i][j] and board[i][j].color==player:
-                    mv=board[i][j].get_possible_moves(board,(i,j),self.is_check,self)
-                    if mv:
-                        moves[i*10+j] = mv
-        return moves
+    # def generate_moves_dict(self,player,board):
+    #     moves={}
+    #     for i in range(8):
+    #         for j in range(8):
+    #             if board[i][j] and board[i][j].color==player:
+    #                 mv=board[i][j].get_possible_moves(board,(i,j),self.is_check,self)
+    #                 if mv:
+    #                     moves[i*10+j] = mv
+    #     return moves
 
     
     def getNextMove(self,board,game_obj,player="black"):
