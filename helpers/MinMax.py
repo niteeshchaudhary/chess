@@ -1,85 +1,130 @@
 import random
+from tokens import Queen, Rook, Bishop, Knight
 
 class MinMax:
+    """
+    MinMax algorithm for chess move selection.
+    
+    The minimax algorithm recursively evaluates positions by assuming
+    both players play optimally - maximizing for us, minimizing for opponent.
+    """
 
     def __init__(self):
-        self.name="MinMax"
-        self.players={"black":"white","white":"black"}
-        self.score={"pawn":10,"knight":30,"bishop":30,"rook":50,"queen":90,"king":9000}
+        self.name = "MinMax"
+        self.players = {"black": "white", "white": "black"}
+        # Improved piece values (in centipawns)
+        self.score = {
+            "pawn": 100,
+            "knight": 320,
+            "bishop": 330,
+            "rook": 500,
+            "queen": 900,
+            "king": 20000
+        }
+        # Track the root player for correct evaluation
+        self.root_player = None
 
     def make_move_on_board(self, start, end, board):
+        """Make a move on the board copy."""
         piece = board[start[0]][start[1]]
-        piece.has_moved = True
+        if piece:
+            piece.has_moved = True
         board[end[0]][end[1]] = piece
         board[start[0]][start[1]] = None
         
-    def choose_piece(self,position):
-        options=['queen']*50+['knight']*10
+        # Handle pawn promotion
+        if piece and piece.name == "pawn":
+            if end[0] == 0 or end[0] == 7:
+                board[end[0]][end[1]] = Queen(piece.color)
+        
+    def choose_piece(self, position):
+        """Choose piece for pawn promotion."""
+        options = ['queen'] * 50 + ['knight'] * 10
         return random.choice(options)
 
-
-    def evaluate_board(self,board,player,isMaxplayer):
-        score=0
-        if isMaxplayer:
-            for i in range(8):
-                for j in range(8):
-                    if board[i][j]:
-                        if board[i][j].color==player:
-                            score+=self.score[board[i][j].name]
-                        else:
-                            score-=self.score[board[i][j].name]
-                    
-        else:
-            for i in range(8):
-                for j in range(8):
-                    if board[i][j]:
-                        if board[i][j].color==player:
-                            score-=self.score[board[i][j].name]
-                        else:
-                            score+=self.score[board[i][j].name]
-        
+    def evaluate_board(self, board):
+        """
+        Evaluate board from the root player's perspective.
+        Positive score = good for root player.
+        """
+        score = 0
+        for i in range(8):
+            for j in range(8):
+                piece = board[i][j]
+                if piece:
+                    piece_value = self.score[piece.name]
+                    if piece.color == self.root_player:
+                        score += piece_value
+                    else:
+                        score -= piece_value
         return score
 
-    def minmax(self,board,game_obj,player,depth=2,isMaxplayer=True):
-
-        moves=game_obj.generate_moves_list(player,board)
-        random.shuffle(moves)
-        #print(moves)
+    def minmax(self, board, game_obj, player, depth=2, is_maximizing=True):
+        """
+        MinMax search algorithm.
         
-
-        if depth==0:
-            return None,self.evaluate_board(board,player,isMaxplayer)
-
+        Args:
+            board: Current board state
+            game_obj: Game object for move generation
+            player: Current player to move
+            depth: Remaining search depth
+            is_maximizing: True if maximizing (root player's turn at this level)
+        
+        Returns:
+            (best_move, score) tuple
+        """
+        # Generate legal moves
+        moves = game_obj.generate_moves_list(player, board)
+        
+        # Terminal conditions
+        if depth == 0:
+            return None, self.evaluate_board(board)
+        
         if not moves:
-            if isMaxplayer:
-                return None,-10000000
+            # No moves = checkmate or stalemate
+            if is_maximizing:
+                return None, -1000000 + (10 - depth) * 100  # Prefer later checkmates
             else:
-                return None,10000000
+                return None, 1000000 - (10 - depth) * 100
         
-        best_move=random.choice(moves)
+        # Shuffle for variety
+        random.shuffle(moves)
+        best_move = moves[0]
         
-        if isMaxplayer:
-            maxscore=-10000000
-            for child in moves:
-                next_board= [row[:] for row in board]
-                game_obj.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,False)
-                if myscore>maxscore:
-                    best_move=child
-                    maxscore=myscore
-            return best_move,maxscore
+        if is_maximizing:
+            max_score = -10000000
+            for move in moves:
+                # Make move on copy
+                next_board = [row[:] for row in board]
+                self.make_move_on_board(move[0], move[1], next_board)
+                
+                # Recurse
+                _, score = self.minmax(next_board, game_obj, self.players[player], depth - 1, False)
+                
+                if score > max_score:
+                    max_score = score
+                    best_move = move
+                    
+            return best_move, max_score
         else:
-            minscore=+1000000
-            for child in moves:
-                next_board= [row[:] for row in board]
-                game_obj.make_move_on_board(child[0],child[1],next_board)
-                _,myscore=self.minmax(next_board,game_obj,self.players[player],depth-1,True)
-                if myscore<minscore:
-                    best_move=child
-                    minscore=myscore
-            return best_move,minscore
+            min_score = 10000000
+            for move in moves:
+                # Make move on copy
+                next_board = [row[:] for row in board]
+                self.make_move_on_board(move[0], move[1], next_board)
+                
+                # Recurse
+                _, score = self.minmax(next_board, game_obj, self.players[player], depth - 1, True)
+                
+                if score < min_score:
+                    min_score = score
+                    best_move = move
+                    
+            return best_move, min_score
     
-    def getNextMove(self,board,game_obj,player="black",depth=3):
-        move,_=self.minmax(board,game_obj,player,depth,True)
-        print(move)
+    def getNextMove(self, board, game_obj, player="black", depth=3):
+        """Get the best move for the given player."""
+        self.root_player = player  # Set root player for evaluation
+        move, score = self.minmax(board, game_obj, player, depth, True)
+        print(f"MinMax: {move}, score: {score}")
         return move

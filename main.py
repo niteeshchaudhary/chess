@@ -11,6 +11,17 @@ game_=None
 
 def restart_game(win_obj):
     global game_
+    
+    # Store game type before destroying
+    was_ai_game = isinstance(game_, AI_Game)
+    was_ai_vs_ai = isinstance(game_, AI_Vs_AI_Game)
+    
+    # For AI vs AI, store the algorithms if available
+    algo1 = getattr(game_, 'myalgo_white', None)
+    algo2 = getattr(game_, 'myalgo_black', None)
+    algo1_name = algo1.name if algo1 else "RandomMove"
+    algo2_name = algo2.name if algo2 else "RandomMove"
+    
     win_obj.destroy()
     game_window = tk.Toplevel()
     game_window.title("Game Window")
@@ -26,12 +37,11 @@ def restart_game(win_obj):
     game_window.geometry(f"{screen_width}x{screen_height}")
     
     board_frame=create_center_pane(game_window)
-    # board_frame.pack()
 
-    if isinstance(game_,AI_Game):
+    if was_ai_game:
         game_= AI_Game(board_frame,history_pane,option_pane,time_pane)
-    elif isinstance(game_,AI_Vs_AI_Game):
-        game_= select_AI(board_frame,history_pane,option_pane,time_pane)
+    elif was_ai_vs_ai:
+        game_= AI_Vs_AI_Game(board_frame,history_pane,option_pane,time_pane,algo1_name,algo2_name)
     else:
         game_= Two_Player_Game(board_frame,history_pane,option_pane,time_pane)
 
@@ -68,7 +78,7 @@ def undo():
         del i
 
     for i in game_.move_labels_text:
-        move_label = tk.Label(game_.move_history_frame, text=i, height=1, relief="sunken", font=("Arial", 20))
+        move_label = tk.Label(game_.move_history_frame, text=i, height=1, relief="sunken", font=("DejaVu Sans", 18))
         if i[0] in black:
             move_label.pack(anchor="w",padx=5)
         else:
@@ -214,7 +224,7 @@ def select_AI(gmw):
     selected_option1 = tk.StringVar(center_frame)
     selected_option1.set(start_algo1)
 
-    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta", "AlphaBeta_DP","AlphaBeta_DP_BinHash","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
     dropdown1.pack(pady=10)
 
 
@@ -222,7 +232,7 @@ def select_AI(gmw):
     selected_option2.set(start_algo2)
 
     # Create the dropdown menu
-    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta", "AlphaBeta_DP","AlphaBeta_DP_BinHash","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
     dropdown2.pack(pady=10)
 
     button = tk.Button(center_frame, text="Continue", command=lambda:ai_vs_ai_Game(game_window,selected_option1.get(),selected_option2.get()), width=20, height=2)

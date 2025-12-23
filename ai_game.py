@@ -25,7 +25,7 @@ class AI_Game:
         selected_option.set(start_algo)
 
         # Create the dropdown menu
-        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot", command=self.change_algo)
+        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta", "AlphaBeta_DP","AlphaBeta_DP_BinHash","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine", command=self.change_algo)
         dropdown.pack()
 
 
@@ -533,7 +533,7 @@ class AI_Game:
         
         move_text=f"{symbol} {self.column_names[start[1]]}{start[0]+1}-{self.column_names[end[1]]}{end[0]+1}"
         self.move_labels_text.append(move_text)
-        move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("Arial", 20))
+        move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("DejaVu Sans", 18))
         self.history.write(f"{start[1]},{start[0]},{end[1]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
 
         if self.current_player=="white":
@@ -575,6 +575,22 @@ class AI_Game:
         
 
 if __name__ == "__main__":
+    # For standalone testing - run main.py for full experience
     root = tk.Tk()
-    game = AI_Game(root)
+    root.title("AI Game - Standalone Test")
+    
+    # Create required panes
+    option_pane = tk.Frame(root, bg="lightgreen", height=50)
+    option_pane.pack(side="top", fill="x")
+    
+    history_pane = tk.Frame(root, bg="lightblue", width=150)
+    history_pane.pack(side="left", fill="y")
+    
+    time_pane = tk.Frame(root, bg="lightblue", width=150)
+    time_pane.pack(side="right", fill="y")
+    
+    board_frame = tk.Frame(root)
+    board_frame.pack(expand=True, fill="both")
+    
+    game = AI_Game(board_frame, history_pane, option_pane, time_pane)
     root.mainloop()
