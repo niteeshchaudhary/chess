@@ -2,15 +2,38 @@ import os
 import selector
 import pyautogui as pg
 import numpy as np
-import os
 import cv2
 from tkinter import *
 from tkinter import messagebox
 import time
-from  tokens_2 import Rook, Knight, Bishop, Queen, King, Pawn
+from tokens_2 import Rook, Knight, Bishop, Queen, King, Pawn
 
-import cv2
-import numpy as np
+# Try to use mss for better Linux/Wayland support
+try:
+    import mss
+    USE_MSS = True
+except ImportError:
+    USE_MSS = False
+    print("Warning: mss not installed. Using pyautogui for screenshots (may not work on Wayland).")
+    print("Install with: pip install mss")
+
+
+def take_screenshot():
+    """Take a screenshot using the best available method."""
+    if USE_MSS:
+        with mss.mss() as sct:
+            # Capture the entire screen (monitor 0 is all monitors, 1 is first monitor)
+            monitor = sct.monitors[1]  # Primary monitor
+            screenshot = sct.grab(monitor)
+            # Convert to numpy array in BGR format for OpenCV
+            img = np.array(screenshot)
+            # mss returns BGRA, convert to BGR
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            return img
+    else:
+        # Fallback to pyautogui
+        screenshot = pg.screenshot()
+        return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
 
 def locate_image(main_image_path, template_image_path):
     # Read the main image and the template image
@@ -50,8 +73,7 @@ class Game:
         self.screenshot = None
 
     def play(self):
-            self.screenshot = pg.screenshot()
-            self.screenshot = cv2.cvtColor(np.array(self.screenshot), cv2.COLOR_RGB2BGR)
+            self.screenshot = take_screenshot()
             board=""
             folder_path = "boardimages"
             
@@ -74,9 +96,10 @@ class Game:
                 print(b_inf)
                 if (b_inf[3]-b_inf[1])<100 or (b_inf[2]-b_inf[0])<120:
                     menu()
-                sc = pg.screenshot()
-                roi = sc.crop(b_inf)
-                roi.save(f"./{folder_path}/{num_files + 1}.png")
+                sc = take_screenshot()
+                # Crop using numpy array slicing: [y1:y2, x1:x2]
+                roi = sc[b_inf[1]:b_inf[3], b_inf[0]:b_inf[2]]
+                cv2.imwrite(f"./{folder_path}/{num_files + 1}.png", roi)
                 board = Obj(b_inf)
 
             prev = ""
@@ -167,8 +190,7 @@ class Game:
                 return None,None
 
     def read_board(self):
-        self.screenshot = pg.screenshot()
-        self.screenshot = cv2.cvtColor(np.array(self.screenshot), cv2.COLOR_RGB2BGR)
+        self.screenshot = take_screenshot()
         i = 0
         # num_token_files = len(os.listdir(token_folder_path))
         self.board_data=[[None for i in range(8)] for j in range(8)]

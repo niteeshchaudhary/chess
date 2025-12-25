@@ -4,3 +4,5 @@
 /history
 /helpers/trash
 /compvision
+/helpers/__pycache__/
+/tokens_2/__pycache__/

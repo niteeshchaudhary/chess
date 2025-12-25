@@ -68,7 +68,7 @@ def undo():
         del i
 
     for i in game_.move_labels_text:
-        move_label = tk.Label(game_.move_history_frame, text=i, height=1, relief="sunken", font=("Arial", 20))
+        move_label = tk.Label(game_.move_history_frame, text=i, height=1, relief="sunken", font=("DejaVu Sans", 20))
         if i[0] in black:
             move_label.pack(anchor="w",padx=5)
         else:
@@ -116,7 +116,7 @@ def create_top_pane(win_obj):
 def create_right_pane(win_obj):
     right_frame = tk.Frame(win_obj, bg="lightblue", width=500, height=300)
     right_frame.pack(side="right", fill="y")
-    time_text=tk.Label(right_frame, text="Time", height=1, relief="sunken", font=("Arial", 46))
+    time_text=tk.Label(right_frame, text="Time", height=1, relief="sunken", font=("DejaVu Sans", 46))
     time_text.pack(side="top",fill=tk.X)
     right_frame.pack_propagate(0)
     return right_frame
@@ -214,7 +214,7 @@ def select_AI(gmw):
     selected_option1 = tk.StringVar(center_frame)
     selected_option1.set(start_algo1)
 
-    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
     dropdown1.pack(pady=10)
 
 
@@ -222,7 +222,7 @@ def select_AI(gmw):
     selected_option2.set(start_algo2)
 
     # Create the dropdown menu
-    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot")
+    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
     dropdown2.pack(pady=10)
 
     button = tk.Button(center_frame, text="Continue", command=lambda:ai_vs_ai_Game(game_window,selected_option1.get(),selected_option2.get()), width=20, height=2)

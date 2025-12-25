@@ -145,7 +145,7 @@ class BotPlay:
         for move in king_moves:
             backup_board = [row[:] for row in self.board]
             self.make_move_on_board(king_position, move, backup_board)
-            if not self.is_king_under_attack(move):
+            if not self.is_king_under_attack(move, backup_board):
                 valid_moves.append(move)
             
         # Check if any other piece can block or capture the attacking piece
@@ -178,7 +178,7 @@ class BotPlay:
         for move in king_moves:
             backup_board = [row[:] for row in board]
             self.make_move_on_board(king_position, move, backup_board)
-            if not self.is_king_under_attack(move):
+            if not self.is_king_under_attack(move, backup_board):
                 valid_moves.append(move)
             
         # Check if any other piece can block or capture the attacking piece
@@ -188,8 +188,8 @@ class BotPlay:
         for row in range(8):
             for col in range(8):
                 piece = board[row][col]
-                if piece and piece.color == self.current_player:
-                    possible_moves = piece.get_possible_moves(self.board, (row, col),is_check,game=self)
+                if piece and piece.color == player:
+                    possible_moves = piece.get_possible_moves(board, (row, col),is_check,game=self)
                     if len(possible_moves)>0: 
                         return False
 

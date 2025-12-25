@@ -20,6 +20,20 @@ class MyAlgo:
             self.hp = hp.AlphaBeta_DP()
         elif name=="MyBot":
             self.hp = hp.MyBot()
+        elif name=="PhaseBasedEngine":
+            self.hp = hp.PhaseBasedEngine()
+        elif name=="QuiescenceEngine":
+            self.hp = hp.QuiescenceEngine()
+        elif name=="NeuralPatternEngine":
+            self.hp = hp.NeuralPatternEngine()
+        elif name=="MCTSEngine":
+            self.hp = hp.MCTSEngine()
+        elif name=="HybridMCTSEngine":
+            self.hp = hp.HybridMCTSEngine()
+        elif name=="RLEngine":
+            self.hp = hp.RLEngine()
+        elif name=="DeepRLEngine":
+            self.hp = hp.DeepRLEngine()
 
     def get_object(self,name=""):
         if name != "":
@@ -41,5 +55,19 @@ class MyAlgo:
                 self.hp = hp.AlphaBeta_DP()
             elif name=="MyBot":
                 self.hp = hp.MyBot()
+            elif name=="PhaseBasedEngine":
+                self.hp = hp.PhaseBasedEngine()
+            elif name=="QuiescenceEngine":
+                self.hp = hp.QuiescenceEngine()
+            elif name=="NeuralPatternEngine":
+                self.hp = hp.NeuralPatternEngine()
+            elif name=="MCTSEngine":
+                self.hp = hp.MCTSEngine()
+            elif name=="HybridMCTSEngine":
+                self.hp = hp.HybridMCTSEngine()
+            elif name=="RLEngine":
+                self.hp = hp.RLEngine()
+            elif name=="DeepRLEngine":
+                self.hp = hp.DeepRLEngine()
 
         return self.hp

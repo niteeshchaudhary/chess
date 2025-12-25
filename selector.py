@@ -18,7 +18,7 @@ class Selector(Frame):
                    "Note: draw rectangle very close to grid \n",
                     bg="green", bd = 100, fg = "white",
                     width="20",
-                    font=("Arial", 20)).place(x = 4*w//6,y = h//4)
+                    font=("DejaVu Sans", 20)).place(x = 4*w//6,y = h//4)
 
         self.rect = None
         self.start_x = None

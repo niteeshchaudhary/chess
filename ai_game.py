@@ -31,8 +31,8 @@ class AI_Game:
 
         self.move_history_frame = history_pane
 
-        self.black_time_label=tk.Label(time_pane, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("Arial", 46))
-        self.white_time_label=tk.Label(time_pane, text="0", bg="white", height=1, relief="sunken", font=("Arial", 46))
+        self.black_time_label=tk.Label(time_pane, text="0", bg="black",fg="white",  height=1, relief="sunken", font=("DejaVu Sans", 46))
+        self.white_time_label=tk.Label(time_pane, text="0", bg="white", height=1, relief="sunken", font=("DejaVu Sans", 46))
         self.black_time_label.pack(side="top",fill=tk.X, expand=True)
         self.white_time_label.pack(side="bottom",fill=tk.X, expand=True)
         self.black_time=0
@@ -48,7 +48,7 @@ class AI_Game:
         # self.master_win.title("Chess Game")
         self.current_player="white"
 
-        self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("Arial", 16), bg="lightblue", bd=0)
+        self.current_player_label= tk.Label(self.move_history_frame, text="Player Turn: "+self.current_player, height=1, relief="sunken", font=("DejaVu Sans", 16), bg="lightblue", bd=0)
         self.current_player_label.pack(pady=20)
 
         self.current_orientation = 'normal'  # or 'normal' for default, 'rotated' for rotated
@@ -146,7 +146,7 @@ class AI_Game:
         for row in range(8):
             row_squares = []
             for col in range(8):
-                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("Arial", 46))
+                square = tk.Label(self.master, text="", bg=self.get_square_color(row, col), width=2, height=1, relief="sunken", font=("DejaVu Sans", 46))
                 square.grid(row=row, column=col)
                 row_squares.append(square)
             squares.append(row_squares)
@@ -342,7 +342,7 @@ class AI_Game:
         for move in king_moves:
             backup_board = [row[:] for row in self.board]
             self.make_move_on_board(king_position, move, backup_board)
-            if not self.is_king_under_attack(move):
+            if not self.is_king_under_attack(move, backup_board):
                 valid_moves.append(move)
             
         # Check if any other piece can block or capture the attacking piece
@@ -375,7 +375,7 @@ class AI_Game:
         for move in king_moves:
             backup_board = [row[:] for row in board]
             self.make_move_on_board(king_position, move, backup_board)
-            if not self.is_king_under_attack(move):
+            if not self.is_king_under_attack(move, backup_board):
                 valid_moves.append(move)
             
         # Check if any other piece can block or capture the attacking piece
@@ -385,8 +385,8 @@ class AI_Game:
         for row in range(8):
             for col in range(8):
                 piece = board[row][col]
-                if piece and piece.color == self.current_player:
-                    possible_moves = piece.get_possible_moves(self.board, (row, col),is_check,game=self)
+                if piece and piece.color == player:
+                    possible_moves = piece.get_possible_moves(board, (row, col),is_check,game=self)
                     if len(possible_moves)>0: 
                         return False
 
@@ -533,7 +533,7 @@ class AI_Game:
         
         move_text=f"{symbol} {self.column_names[start[1]]}{start[0]+1}-{self.column_names[end[1]]}{end[0]+1}"
         self.move_labels_text.append(move_text)
-        move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("Arial", 20))
+        move_label = tk.Label(self.move_history_frame, text=move_text, height=1, relief="sunken", font=("DejaVu Sans", 20))
         self.history.write(f"{start[1]},{start[0]},{end[1]},{end[0]},{self.current_player},{symbol},{self.board[end[0]][end[1]].__class__.__name__}\n")
 
         if self.current_player=="white":

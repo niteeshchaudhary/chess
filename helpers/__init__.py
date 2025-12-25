@@ -6,4 +6,9 @@ from .RandomMove import RandomMove
 from .AlphaBeta import AlphaBeta
 from .AlphaBeta_DP_BinHash import AlphaBeta_DP_BinHash
 from .Greedy import Greedy
-from .MyBot import MyBot   
+from .MyBot import MyBot
+from .PhaseBasedEngine import PhaseBasedEngine
+from .QuiescenceEngine import QuiescenceEngine
+from .NeuralPatternEngine import NeuralPatternEngine
+from .MCTSEngine import MCTSEngine, HybridMCTSEngine
+from .RLEngine import RLEngine, DeepRLEngine   

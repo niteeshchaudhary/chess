@@ -2,25 +2,48 @@ import os
 import selector
 import pyautogui as pg
 import numpy as np
-import os
 import cv2
 from tkinter import *
 from tkinter import messagebox
 import time
 
+# Try to use mss for better Linux/Wayland support
+try:
+    import mss
+    USE_MSS = True
+except ImportError:
+    USE_MSS = False
+    print("Warning: mss not installed. Using pyautogui for screenshots (may not work on Wayland).")
+    print("Install with: pip install mss")
+
+
+def take_screenshot():
+    """Take a screenshot using the best available method."""
+    if USE_MSS:
+        with mss.mss() as sct:
+            monitor = sct.monitors[1]  # Primary monitor
+            screenshot = sct.grab(monitor)
+            img = np.array(screenshot)
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            return img
+    else:
+        screenshot = pg.screenshot()
+        return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+
+
 class Game:
 
     def play(self):
-            screenshot = pg.screenshot()
-            screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+            screenshot = take_screenshot()
             folder_path = "./tokens_image"
             for i in range(20):
                 print("please choose the correct region")
                 b_inf = list(map(int, selector.getSelection()))
                 print(b_inf)
-                sc = pg.screenshot()
-                roi = sc.crop(b_inf)
-                roi.save(f"./{folder_path}/{i + 1}.png")
+                sc = take_screenshot()
+                # Crop using numpy array slicing: [y1:y2, x1:x2]
+                roi = sc[b_inf[1]:b_inf[3], b_inf[0]:b_inf[2]]
+                cv2.imwrite(f"./{folder_path}/{i + 1}.png", roi)
                 # if (b_inf[3]-b_inf[1])<100 or (b_inf[2]-b_inf[0])<120:
                 #     menu()
 
