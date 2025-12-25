@@ -1,24 +1,24 @@
 from tkinter import *    
 
 class Selector(Frame):
-    def __init__(self,master):
+    def __init__(self,master,msg=""):
         Frame.__init__(self,master=None)
+        dfmsg="We were unable to detect grid,\nplease select the grid manually,\nNote: draw rectangle very close to grid \n"
+        if msg=="":
+            msg=dfmsg
         w=master.winfo_screenwidth()
         h=master.winfo_screenheight()
         self.root=master
         self.x = self.y = 0
-        self.canvas = Canvas(self,  bg = "black",cursor="cross",height=h, width=w)
+        self.canvas = Canvas(self, bg='grey', cursor="cross", height=h, width=w, highlightthickness=0)
         self.canvas.grid(row=h,column=w)
         self.canvas.bind("<ButtonPress-1>", self.on_button_press)
         self.canvas.bind("<B1-Motion>", self.on_move_press)
         self.canvas.bind("<ButtonRelease-1>", self.on_button_release)
-        Label(self,text="We were unable to detect grid,\n"+
-                   "please select "+
-                   "the grid manually,\n"+
-                   "Note: draw rectangle very close to grid \n",
+        Label(self,text=msg,
                     bg="green", bd = 100, fg = "white",
                     width="20",
-                    font=("DejaVu Sans", 20)).place(x = 4*w//6,y = h//4)
+                    font=("Arial", 20)).place(x = 4*w//6,y = h//4)
 
         self.rect = None
         self.start_x = None
@@ -48,16 +48,22 @@ class Selector(Frame):
         self.end_y = self.canvas.canvasy(event.y)
         self.root.destroy()
 
-def getSelection():
+def getSelection(msg=""):
     root=Tk()
     root.overrideredirect(True)
     width = root.winfo_screenwidth()
     height = root.winfo_screenheight()
-    root.geometry('%dx%d+%d+%d' % (width, height, 0, 0))
-    app = Selector(root)
-    app.pack()
-    root.attributes('-alpha', 0.5)
+    root.geometry('%dx%d+%d+%d' % (width+10, height, -10, 0))
+    root.configure(bg='grey')
+    root.wait_visibility(root)
+    root.attributes('-alpha', 0.2)
+    app = Selector(root,msg)
+    app.pack()  # Set transparency to 30% (0.3)
     root.mainloop()
+    if(app.start_x>app.end_x):
+        app.start_x,app.end_x=app.end_x,app.start_x
+    if(app.start_y>app.end_y):
+        app.start_y,app.end_y=app.end_y,app.start_y
     return [app.start_x,app.start_y,app.end_x,app.end_y]
 
 
