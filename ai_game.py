@@ -24,8 +24,11 @@ class AI_Game:
         selected_option = tk.StringVar(option_pane)
         selected_option.set(start_algo)
 
+        # Import shared algorithm list
+        from algorithm_list import ALGORITHMS
+        
         # Create the dropdown menu
-        dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot", command=self.change_algo)
+        dropdown = tk.OptionMenu(option_pane, selected_option, *ALGORITHMS, command=self.change_algo)
         dropdown.pack()
 
 

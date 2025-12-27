@@ -3,7 +3,9 @@ class Pawn:
         self.name="pawn"
         self.color = color
         self.has_moved = False
-        self.direction = -1 if color == "black" else 1  # Black moves down (towards row 0), White moves up (towards row 7)
+        # Board layout: White at rows 6-7 (bottom), Black at rows 0-1 (top)
+        # White moves UP (decreasing row: 6->5->4...), Black moves DOWN (increasing row: 1->2->3...)
+        self.direction = 1 if color == "black" else -1  # Black moves down (row 1->2), White moves up (row 6->5)
         self.en_passant_target=None
         
     def get_symbol(self):
@@ -45,9 +47,10 @@ class Pawn:
             possible_moves.append((forward_row, col))
 
             # Check for double move from starting position
-            if (self.color == "black" and row == 6) or (self.color == "white" and row == 1):
+            # Board layout: White starts at row 6, Black starts at row 1
+            if (self.color == "white" and row == 6) or (self.color == "black" and row == 1):
                 double_forward_row = row + 2 * self.direction
-                if board[double_forward_row][col] == None:
+                if 0 <= double_forward_row < 8 and board[double_forward_row][col] == None:
                     possible_moves.append((double_forward_row, col))
                     self.en_passant_target = (row + self.direction, col)  # Set en passant target
 
@@ -78,7 +81,8 @@ class Pawn:
                     possible_moves.append((en_passant_row, capture_col))
 
         # Check for pawn promotion
-        # if (self.color == "white" and forward_row == 7) or (self.color == "black" and forward_row == 0):
+        # Board layout: White promotes at row 0, Black promotes at row 7
+        # if (self.color == "white" and forward_row == 0) or (self.color == "black" and forward_row == 7):
         #     possible_moves = [(move, "promote") for move in possible_moves]
 
         # print(possible_moves)

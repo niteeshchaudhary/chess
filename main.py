@@ -208,13 +208,15 @@ def select_AI(gmw):
     center_frame.pack(expand=True, fill="both",pady=200)
 
 
+    from algorithm_list import ALGORITHMS
+    
     start_algo1="RandomMove"
     start_algo2="RandomMove"
 
     selected_option1 = tk.StringVar(center_frame)
     selected_option1.set(start_algo1)
 
-    dropdown1 = tk.OptionMenu(center_frame, selected_option1, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
+    dropdown1 = tk.OptionMenu(center_frame, selected_option1, *ALGORITHMS)
     dropdown1.pack(pady=10)
 
 
@@ -222,7 +224,7 @@ def select_AI(gmw):
     selected_option2.set(start_algo2)
 
     # Create the dropdown menu
-    dropdown2 = tk.OptionMenu(center_frame, selected_option2, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot","PhaseBasedEngine","QuiescenceEngine","NeuralPatternEngine","MCTSEngine","HybridMCTSEngine","RLEngine","DeepRLEngine")
+    dropdown2 = tk.OptionMenu(center_frame, selected_option2, *ALGORITHMS)
     dropdown2.pack(pady=10)
 
     button = tk.Button(center_frame, text="Continue", command=lambda:ai_vs_ai_Game(game_window,selected_option1.get(),selected_option2.get()), width=20, height=2)

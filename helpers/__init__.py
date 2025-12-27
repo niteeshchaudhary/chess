@@ -11,4 +11,9 @@ from .PhaseBasedEngine import PhaseBasedEngine
 from .QuiescenceEngine import QuiescenceEngine
 from .NeuralPatternEngine import NeuralPatternEngine
 from .MCTSEngine import MCTSEngine, HybridMCTSEngine
-from .RLEngine import RLEngine, DeepRLEngine   
+from .RLEngine import RLEngine, DeepRLEngine
+try:
+    from .StockfishEngine import StockfishEngine
+except ImportError:
+    # StockfishEngine requires python-chess, make it optional
+    StockfishEngine = None   

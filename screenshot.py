@@ -21,7 +21,9 @@ def take_screenshot():
     """Take a screenshot using the best available method."""
     if USE_MSS:
         with mss.mss() as sct:
-            monitor = sct.monitors[1]  # Primary monitor
+            # Use monitors[0] to capture ALL monitors (virtual screen)
+            # This ensures coordinates from tkinter selector match the screenshot
+            monitor = sct.monitors[0]  # All monitors combined
             screenshot = sct.grab(monitor)
             img = np.array(screenshot)
             img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)

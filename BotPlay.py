@@ -21,21 +21,26 @@ def drag_and_drop(start_x, start_y, end_x, end_y, duration=1):
 class BotPlay:
     is_rotation_enabled = False
     
-    def __init__(self,player,board,move_positions,gm):
+    def __init__(self, player, board, move_positions, gm, algorithm_name="AlphaBeta"):
         self.gm=gm
         self.state=[]
         self.move_positions = move_positions
         self.undo=0
-        start_algo="AlphaBeta"
+        start_algo = algorithm_name
         self.algorithm=MyAlgo(start_algo)
+        print(f"[BotPlay] Using algorithm: {algorithm_name}")
 
         self.myalgo=self.algorithm.get_object()
+        
+        # Store previous board state to detect when opponent has moved
+        self.previous_board_state = None
 
         self.history = open(f"history/history{time.time()}.txt", "w+", encoding="utf-8")
 
 
-        # Create the dropdown menu
-        # dropdown = tk.OptionMenu(option_pane, selected_option, "RandomMove","Greedy", "MinMax","MinMax_DP","MinMax_DP_BinHash","AlphaBeta_DP_BinHash", "AlphaBeta", "AlphaBeta_DP","MyBot", command=self.change_algo)
+        # Create the dropdown menu (commented out, but kept for reference)
+        # from algorithm_list import ALGORITHMS
+        # dropdown = tk.OptionMenu(option_pane, selected_option, *ALGORITHMS, command=self.change_algo)
         # dropdown.pack()
 
         self.black_time=0
@@ -65,6 +70,102 @@ class BotPlay:
         else:
             self.black_turn() 
 
+    def boards_are_equal(self, board1, board2):
+        """
+        Compare two board states to see if they are the same.
+        Returns True if boards are identical, False otherwise.
+        """
+        if board1 is None or board2 is None:
+            return False
+        
+        for row in range(8):
+            for col in range(8):
+                piece1 = board1[row][col]
+                piece2 = board2[row][col]
+                
+                # Both empty
+                if piece1 is None and piece2 is None:
+                    continue
+                
+                # One is empty, other is not
+                if (piece1 is None) != (piece2 is None):
+                    return False
+                
+                # Both have pieces - check type and color
+                if piece1.__class__.__name__ != piece2.__class__.__name__:
+                    return False
+                
+                if piece1.color != piece2.color:
+                    return False
+        
+        return True
+    
+    def get_board_state_string(self, board):
+        """
+        Convert board to a string representation for comparison.
+        """
+        state_str = ""
+        for row in range(8):
+            for col in range(8):
+                piece = board[row][col]
+                if piece is None:
+                    state_str += "."
+                else:
+                    piece_name = piece.__class__.__name__[0]  # First letter
+                    color_char = piece.color[0].upper()  # W or B
+                    state_str += f"{piece_name}{color_char}"
+        return state_str
+    
+    def wait_for_board_change(self, player, max_wait_time=30):
+        """
+        Wait until the board state changes (opponent has moved).
+        Don't make move if board state matches previous state.
+        player: "white" or "black"
+        max_wait_time: Maximum time to wait in seconds
+        Returns: Updated board state after opponent's move
+        """
+        print(f"[BotPlay] Checking if board state has changed for {player}...")
+        start_time = time.time()
+        check_interval = 1.0  # Check every 1 second
+        
+        # Read current board state
+        current_board = self.gm.read_board()
+        
+        # If no previous state, store current and proceed
+        if self.previous_board_state is None:
+            print(f"[BotPlay] No previous board state. Storing current state and proceeding.")
+            self.previous_board_state = copy.deepcopy(current_board)
+            return current_board
+        
+        # Check if board has changed
+        if not self.boards_are_equal(current_board, self.previous_board_state):
+            print(f"[BotPlay] Board state has changed. Opponent has moved. Proceeding with move.")
+            self.previous_board_state = copy.deepcopy(current_board)
+            return current_board
+        
+        # Board hasn't changed - wait and keep checking
+        print(f"[BotPlay] Board state unchanged. Waiting for opponent's move...")
+        
+        while time.time() - start_time < max_wait_time:
+            time.sleep(check_interval)
+            
+            # Read board again
+            current_board = self.gm.read_board()
+            
+            # Check if board has changed
+            if not self.boards_are_equal(current_board, self.previous_board_state):
+                print(f"[BotPlay] Board state changed after {int(time.time() - start_time)}s. Proceeding with move.")
+                self.previous_board_state = copy.deepcopy(current_board)
+                return current_board
+            
+            elapsed = time.time() - start_time
+            if int(elapsed) % 2 == 0 and elapsed > 0:
+                print(f"[BotPlay] Still waiting for board change... ({int(elapsed)}s elapsed)")
+        
+        print(f"[WARNING] Timeout after {max_wait_time} seconds. Board state unchanged. Proceeding anyway.")
+        # Update previous state even on timeout
+        self.previous_board_state = copy.deepcopy(current_board)
+        return current_board
 
     def change_algo(self,algo):
         self.myalgo=self.algorithm.get_object(algo)
@@ -223,61 +324,197 @@ class BotPlay:
 
     def black_turn(self,board=[]):
         time.sleep(2)
-        self.gm.read_board()
-        self.black_turn()
+        print("\n[BotPlay] Reading board state before black's move...")
+        self.board = self.gm.read_board()  # Update board from screenshot
         
         if board==[]:
             board=self.board
-        print(self.myalgo.name," is playing")
-        if self.is_checkmate:
-            return
-        
-        t1=time.time()
-        moves=self.generate_moves_dict()
-        if len(moves.keys())==0:
-            self.draw()
-            return
-        try:
-            print("Moves:",moves)
-            current_position,next_position=self.myalgo.getNextMove(board,self,"black")
-            print("AI: ",current_position,next_position)
-            if(next_position in moves[current_position[0]*10+current_position[1]]):
-                self.move_piece(current_position,next_position)
-            else:
-                self.draw()
-        except Exception as e:
-            print("Error:",e)
-            self.history.close()
-            self.draw()
-            return
-        
-        self.black_time+=time.time()-t1
-        self.time_start=time.time()
-
-    def white_turn(self,board=[]):
-        if board==[]:
-            board=self.board
+        else:
+            # If board is provided, update self.board to match
+            self.board = board
         
         self.update_game_state(board)
         if self.is_checkmate:
             return
-        print(self.myalgo.name," is playing")
+        print(f"[BotPlay] {self.myalgo.name} is playing as BLACK")
+        
+        # Wait for board state to change (opponent has moved) and get updated board
+        updated_board = self.wait_for_board_change("black")
+        # Update self.board with the latest board state after opponent's move
+        self.board = updated_board
+        board = updated_board
+        
         t1=time.time()
-        moves=self.generate_moves_dict()
+        # Generate moves using the updated board state
+        moves=self.generate_moves_dict(player="black", board=board)
+        if len(moves.keys())==0:
+            self.draw()
+            return
+        try:
+            # Get next move using the same board state
+            move_result = self.myalgo.getNextMove(board,self,"black")
+            
+            if move_result is None:
+                print("[ERROR] Engine returned None, no valid move found")
+                self.draw()
+                return
+            
+            current_position, next_position = move_result
+            print(f"[BotPlay] AI selected move: {current_position} -> {next_position}")
+            
+            # Validate the move
+            move_key = current_position[0]*10+current_position[1]
+            if move_key in moves and next_position in moves[move_key]:
+                self.move_piece(current_position,next_position)
+                # Wait a bit for the move to be visually executed, then read the actual board state
+                time.sleep(1.0)  # Give time for drag_and_drop to complete
+                # Read the actual visual board state after move
+                visual_board = self.gm.read_board()
+                # Update previous board state to the visual board state (what we actually see)
+                self.previous_board_state = copy.deepcopy(visual_board)
+                # Also update self.board to match visual state
+                self.board = visual_board
+            else:
+                print(f"[ERROR] Invalid move! {current_position} -> {next_position}")
+                print(f"[ERROR] Valid moves for {current_position}: {moves.get(move_key, 'NONE')}")
+                # Try to find any valid move as fallback
+                for key, valid_moves in moves.items():
+                    if valid_moves:
+                        row = key // 10
+                        col = key % 10
+                        fallback_move = ((row, col), valid_moves[0])
+                        print(f"[BotPlay] Using fallback move: {fallback_move}")
+                        self.move_piece(fallback_move[0], fallback_move[1])
+                        # Wait and update board state after fallback move too
+                        time.sleep(1.0)
+                        visual_board = self.gm.read_board()
+                        self.previous_board_state = copy.deepcopy(visual_board)
+                        self.board = visual_board
+                        break
+                else:
+                    self.draw()
+        except Exception as e:
+            print(f"[ERROR] Exception in black_turn: {e}")
+            import traceback
+            traceback.print_exc()
+            # Try fallback move before giving up
+            for key, valid_moves in moves.items():
+                if valid_moves:
+                    row = key // 10
+                    col = key % 10
+                    fallback_move = ((row, col), valid_moves[0])
+                    print(f"[BotPlay] Using emergency fallback move: {fallback_move}")
+                    try:
+                        self.move_piece(fallback_move[0], fallback_move[1])
+                        # Wait and update board state after emergency fallback move too
+                        time.sleep(1.0)
+                        visual_board = self.gm.read_board()
+                        self.previous_board_state = copy.deepcopy(visual_board)
+                        self.board = visual_board
+                        break
+                    except:
+                        continue
+            else:
+                self.history.close()
+                self.draw()
+                return
+        
+        self.black_time+=time.time()-t1
+        self.time_start=time.time()
+        
+        # Continue the game - wait for opponent's move, then play black's turn again
+        time.sleep(6)
+        print("\n[BotPlay] Reading board state before black's next move...")
+        self.board=self.gm.read_board()  # Update board from screenshot
+        self.black_turn()  # Continue with black's turn
+
+    def white_turn(self,board=[]):
+        # Always use the current board state (updated from read_board)
+        if board==[]:
+            board=self.board
+        else:
+            # If board is provided, update self.board to match
+            self.board = board
+        
+        self.update_game_state(board)
+        if self.is_checkmate:
+            return
+        print(f"[BotPlay] {self.myalgo.name} is playing as WHITE")
+        
+        # Wait for board state to change (opponent has moved) and get updated board
+        updated_board = self.wait_for_board_change("white")
+        # Update self.board with the latest board state after opponent's move
+        self.board = updated_board
+        board = updated_board
+        
+        t1=time.time()
+        # Generate moves using the updated board state
+        moves=self.generate_moves_dict(player="white", board=board)
         if len(moves.keys())==0:
             self.draw()
             return
         
 
-        current_position,next_position=self.myalgo.getNextMove(board=board,game_obj=self,player="white")
-        print("white",current_position,next_position)
-        if(next_position in moves[current_position[0]*10+current_position[1]]):
-            self.move_piece(current_position,next_position)
+        # Get next move using the same board state
+        move_result = self.myalgo.getNextMove(board=board,game_obj=self,player="white")
+        
+        if move_result is None:
+            print("[ERROR] Engine returned None, no valid move found")
+            # Try to find any valid move as fallback
+            for key, valid_moves in moves.items():
+                if valid_moves:
+                    row = key // 10
+                    col = key % 10
+                    fallback_move = ((row, col), valid_moves[0])
+                    print(f"[BotPlay] Using fallback move: {fallback_move}")
+                    self.move_piece(fallback_move[0], fallback_move[1])
+                    # Wait and update board state after fallback move too
+                    time.sleep(1.0)
+                    visual_board = self.gm.read_board()
+                    self.previous_board_state = copy.deepcopy(visual_board)
+                    self.board = visual_board
+                    break
+            else:
+                self.draw()
         else:
-            self.draw()
+            current_position, next_position = move_result
+            print(f"[BotPlay] AI selected move: {current_position} -> {next_position}")
+            
+            # Validate the move
+            move_key = current_position[0]*10+current_position[1]
+            if move_key in moves and next_position in moves[move_key]:
+                self.move_piece(current_position,next_position)
+                # Wait a bit for the move to be visually executed, then read the actual board state
+                time.sleep(1.0)  # Give time for drag_and_drop to complete
+                # Read the actual visual board state after move
+                visual_board = self.gm.read_board()
+                # Update previous board state to the visual board state (what we actually see)
+                self.previous_board_state = copy.deepcopy(visual_board)
+                # Also update self.board to match visual state
+                self.board = visual_board
+            else:
+                print(f"[ERROR] Invalid move! {current_position} -> {next_position}")
+                print(f"[ERROR] Valid moves for {current_position}: {moves.get(move_key, 'NONE')}")
+                # Try to find any valid move as fallback
+                for key, valid_moves in moves.items():
+                    if valid_moves:
+                        row = key // 10
+                        col = key % 10
+                        fallback_move = ((row, col), valid_moves[0])
+                        print(f"[BotPlay] Using fallback move: {fallback_move}")
+                        self.move_piece(fallback_move[0], fallback_move[1])
+                        # Wait and update board state after fallback move too
+                        time.sleep(1.0)
+                        visual_board = self.gm.read_board()
+                        self.previous_board_state = copy.deepcopy(visual_board)
+                        self.board = visual_board
+                        break
+                else:
+                    self.draw()
 
         time.sleep(6)
-        self.board=self.gm.read_board()
+        print("\n[BotPlay] Reading board state before white's next move...")
+        self.board=self.gm.read_board()  # Update board from screenshot
         self.white_turn()
 
 
@@ -342,18 +579,13 @@ class BotPlay:
         player=self.current_player if player=="" else player
         myboard=self.board if board==[] else board
         moves={}
-        print(board,player)
         for i in range(8):
             for j in range(8):
-                    
                 if myboard[i][j] and myboard[i][j].color==player:
-                    print("RR")
-                    print(myboard[i][j].color,i,j)
                     mv=myboard[i][j].get_possible_moves(myboard,(i,j),self.is_check,self)
-                    print("OO",mv,self.is_check)
                     if mv:
                         moves[i*10+j] = mv
-        print(moves)
+        print(f"[BotPlay] Generated {len(moves)} pieces with valid moves for {player}")
         return moves
 
     def generate_moves_list(self,player="",board=[]):

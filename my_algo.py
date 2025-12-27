@@ -34,6 +34,13 @@ class MyAlgo:
             self.hp = hp.RLEngine()
         elif name=="DeepRLEngine":
             self.hp = hp.DeepRLEngine()
+        elif name=="StockfishEngine":
+            if hp.StockfishEngine:
+                self.hp = hp.StockfishEngine()
+            else:
+                print("[ERROR] StockfishEngine not available. Install python-chess: pip install python-chess")
+                print("[ERROR] Also install Stockfish binary for your system.")
+                raise ImportError("StockfishEngine requires python-chess and Stockfish binary")
 
     def get_object(self,name=""):
         if name != "":
@@ -69,5 +76,12 @@ class MyAlgo:
                 self.hp = hp.RLEngine()
             elif name=="DeepRLEngine":
                 self.hp = hp.DeepRLEngine()
+            elif name=="StockfishEngine":
+                if hp.StockfishEngine:
+                    self.hp = hp.StockfishEngine()
+                else:
+                    print("[ERROR] StockfishEngine not available. Install python-chess: pip install python-chess")
+                    print("[ERROR] Also install Stockfish binary for your system.")
+                    raise ImportError("StockfishEngine requires python-chess and Stockfish binary")
 
         return self.hp
