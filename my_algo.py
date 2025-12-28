@@ -24,6 +24,8 @@ class MyAlgo:
             self.hp = hp.PhaseBasedEngine()
         elif name=="QuiescenceEngine":
             self.hp = hp.QuiescenceEngine()
+        elif name=="QuiescenceEngineDeep":
+            self.hp = hp.QuiescenceEngineDeep()
         elif name=="NeuralPatternEngine":
             self.hp = hp.NeuralPatternEngine()
         elif name=="MCTSEngine":
@@ -66,6 +68,8 @@ class MyAlgo:
                 self.hp = hp.PhaseBasedEngine()
             elif name=="QuiescenceEngine":
                 self.hp = hp.QuiescenceEngine()
+            elif name=="QuiescenceEngineDeep":
+                self.hp = hp.QuiescenceEngineDeep()
             elif name=="NeuralPatternEngine":
                 self.hp = hp.NeuralPatternEngine()
             elif name=="MCTSEngine":

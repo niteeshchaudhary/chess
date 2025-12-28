@@ -7,6 +7,7 @@ This ensures consistency across all files that need algorithm selection.
 # ⭐ = Recommended for best play
 ALGORITHMS = [
     "StockfishEngine",           # 🏆 WORLD CHAMPION: Stockfish engine (requires python-chess + Stockfish binary)
+    "QuiescenceEngineDeep",
     "QuiescenceEngine",          # ⭐ Strongest: Advanced pruning, quiescence search, depth=5
     "PhaseBasedEngine",          # ⭐ Best Balance: Opening book, phase-adaptive, depth=4
     "NeuralPatternEngine",       # ⭐ Strong: Pattern recognition, depth=4

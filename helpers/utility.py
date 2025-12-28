@@ -123,9 +123,12 @@ class Utility:
                 piece = self.board[row][col]
                 if piece and piece.color == self.current_player:
                     possible_moves = piece.get_possible_moves(self.board, (row, col),self.is_check,game=self)
-                    if len(possible_moves)>0:
-  
-                        return False
+                    for move in possible_moves:
+                        backup_board = [row[:] for row in self.board]
+                        self.make_move_on_board((row, col), move, backup_board)
+                        # Check if this move gets the king out of check
+                        if not self.is_king_under_attack(king_position, backup_board):
+                            return False
 
         return True
     
@@ -149,13 +152,26 @@ class Utility:
         if valid_moves:
             return False
 
+        # Temporarily set current_player to check checkmate for the specified player
+        original_player = self.current_player
+        self.current_player = player
+        
         for row in range(8):
             for col in range(8):
                 piece = board[row][col]
                 if piece and piece.color == player:
                     possible_moves = piece.get_possible_moves(board, (row, col),is_check,game=self)
-                    if len(possible_moves)>0: 
-                        return False
+                    for move in possible_moves:
+                        backup_board = [row[:] for row in board]
+                        self.make_move_on_board((row, col), move, backup_board)
+                        # Check if this move gets the king out of check
+                        if not self.is_king_under_attack(king_position, backup_board):
+                            self.current_player = original_player
+                            return False
+        
+        # Restore original player
+        self.current_player = original_player
+        return True
     
     def make_move_on_board(self, start, end, board):
         piece = board[start[0]][start[1]]

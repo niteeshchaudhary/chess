@@ -12,6 +12,7 @@ from .QuiescenceEngine import QuiescenceEngine
 from .NeuralPatternEngine import NeuralPatternEngine
 from .MCTSEngine import MCTSEngine, HybridMCTSEngine
 from .RLEngine import RLEngine, DeepRLEngine
+from .QuiescenceEngineDeep import QuiescenceEngineDeep
 try:
     from .StockfishEngine import StockfishEngine
 except ImportError:

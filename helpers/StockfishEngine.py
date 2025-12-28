@@ -195,44 +195,98 @@ class StockfishEngine:
         
         return (from_coords, to_coords)
     
+    def _is_engine_alive(self):
+        """Check if the engine process is still alive."""
+        if self.engine is None:
+            return False
+        
+        try:
+            # Try to ping the engine with a simple command
+            # If the process is dead, this will raise an exception
+            if hasattr(self.engine, 'ping'):
+                self.engine.ping()
+            # Check if the underlying process exists
+            if hasattr(self.engine, 'proc') and self.engine.proc:
+                # Check if process is still running
+                if hasattr(self.engine.proc, 'poll'):
+                    return_code = self.engine.proc.poll()
+                    if return_code is not None:
+                        # Process has terminated
+                        return False
+            return True
+        except (chess.engine.EngineTerminatedError, 
+                chess.engine.EngineError,
+                BrokenPipeError,
+                OSError,
+                AttributeError):
+            return False
+    
     def _reset_engine(self):
         """Reset the engine connection by closing and clearing it."""
         if self.engine is not None:
             try:
-                self.engine.quit()
+                # Try to quit gracefully
+                if self._is_engine_alive():
+                    self.engine.quit()
             except:
-                pass
-            self.engine = None
+                # If quit fails, try to kill the process
+                try:
+                    if hasattr(self.engine, 'proc') and self.engine.proc:
+                        self.engine.proc.kill()
+                except:
+                    pass
+            finally:
+                self.engine = None
     
     def _get_engine(self):
         """Get or create Stockfish engine connection optimized for fast 2-second responses."""
+        # Check if existing engine is still alive
+        if self.engine is not None:
+            if not self._is_engine_alive():
+                print("[WARNING] Engine process is dead, resetting...")
+                self._reset_engine()
+                self.crash_count += 1
+        
+        # Create new engine if needed
         if self.engine is None and self.stockfish_path:
             try:
+                print("[Stockfish] Starting new engine process...")
                 self.engine = chess.engine.SimpleEngine.popen_uci(self.stockfish_path)
                 
                 # Small delay to ensure engine is ready
                 import time
-                time.sleep(0.1)
+                time.sleep(0.2)  # Increased delay for stability
+                
+                # Verify engine is responsive
+                try:
+                    self.engine.ping()
+                except:
+                    print("[WARNING] Engine ping failed, but continuing...")
                 
                 # Configure for STABLE play - reduced resources to prevent crashes
                 import multiprocessing
                 cpu_count = multiprocessing.cpu_count()
-                # Limit threads to prevent crashes (max 4 threads, min 1)
-                num_threads = min(4, max(1, cpu_count // 2))
+                # Limit threads to prevent crashes (max 2 threads for stability)
+                num_threads = min(2, max(1, cpu_count // 4))
                 
                 # Reduced hash to prevent memory issues
-                hash_mb = 128  # Reduced from 512 to prevent crashes
+                hash_mb = 64  # Further reduced for stability
                 
                 # Configure with error handling
                 try:
-                    self.engine.configure({
-                        "Skill Level": 20,           # Maximum skill (0-20, 20 = strongest)
-                        "UCI_LimitStrength": False,  # Disable strength limiting
-                        "Threads": num_threads,      # Limited threads for stability
-                        "Hash": hash_mb,             # Reduced hash for stability
-                    })
+                    # Use minimal configuration to avoid crashes
+                    config = {
+                        "Threads": num_threads,
+                        "Hash": hash_mb,
+                    }
+                    # Only add Skill Level if supported (some versions don't support it)
+                    try:
+                        config["Skill Level"] = 20
+                    except:
+                        pass
+                    
+                    self.engine.configure(config)
                     print(f"[Stockfish] Configured for STABLE play (2s response):")
-                    print(f"  - Skill Level: 20 (maximum)")
                     print(f"  - Threads: {num_threads} (limited for stability)")
                     print(f"  - Hash: {hash_mb} MB (reduced for stability)")
                 except Exception as config_error:
@@ -242,6 +296,7 @@ class StockfishEngine:
             except Exception as e:
                 print(f"[ERROR] Failed to start Stockfish: {e}")
                 self.engine = None
+                self.crash_count += 1
                 return None
         
         return self.engine
@@ -276,6 +331,14 @@ class StockfishEngine:
             return self._use_fallback(board, game_obj, player, depth, "Stockfish not available")
         
         try:
+            # Verify engine is alive before proceeding
+            if not self._is_engine_alive():
+                print("[WARNING] Engine is not alive, resetting...")
+                self._reset_engine()
+                engine = self._get_engine()
+                if not engine:
+                    return self._use_fallback(board, game_obj, player, depth, "Engine not available")
+            
             # Convert board to FEN
             fen = self._board_to_fen(board, player)
             print(f"[Stockfish] Board FEN: {fen}")
@@ -283,12 +346,19 @@ class StockfishEngine:
             # Validate FEN before creating board
             try:
                 chess_board = chess.Board(fen)
+                
+                # Check if there are legal moves
+                if chess_board.is_game_over():
+                    print(f"[WARNING] Game is over, no moves available")
+                    return self._use_fallback(board, game_obj, player, depth, "Game is over")
+                    
             except ValueError as ve:
                 print(f"[ERROR] Invalid FEN: {fen}, error: {ve}")
                 return self._use_fallback(board, game_obj, player, depth, f"Invalid FEN: {ve}")
             
             # Optimized for 2 second response time while maintaining efficiency
-            time_limit = 2.0  # 2 seconds per move for fast response
+            # Reduced time limit slightly to prevent timeouts and crashes
+            time_limit = 1.5  # 1.5 seconds per move for fast response and stability
             
             # Get best move from Stockfish with time limit only
             # Using only time limit to prevent crashes
@@ -298,6 +368,10 @@ class StockfishEngine:
             # Use only time limit - depth limit can cause crashes
             result = None
             try:
+                # Verify engine is still alive before playing
+                if not self._is_engine_alive():
+                    raise chess.engine.EngineTerminatedError("Engine process is dead")
+                
                 # Use only time limit to avoid crashes from depth limits
                 result = engine.play(
                     chess_board, 
@@ -308,15 +382,29 @@ class StockfishEngine:
                     BrokenPipeError,
                     OSError,
                     subprocess.SubprocessError) as play_error:
+                error_msg = str(play_error)
                 print(f"[ERROR] Engine crashed during play: {play_error}")
+                
+                # Check for specific crash indicators
+                is_crash = any(indicator in error_msg.lower() for indicator in [
+                    "exit code", "process died", "unexpectedly", "segmentation",
+                    "sigsegv", "engine process died", "-11"
+                ])
+                
+                if is_crash:
+                    print(f"[ERROR] Stockfish crash detected (exit code: -11 or similar)")
+                
                 # Reset engine and increment crash count
                 self._reset_engine()
                 self.crash_count += 1
                 print(f"[Stockfish] Crash count: {self.crash_count}")
+                
                 # If engine keeps crashing, use fallback immediately
                 if self.crash_count >= 3:
                     print("[WARNING] Stockfish crashed too many times, using fallback for rest of game")
                     return self._use_fallback(board, game_obj, player, depth, f"Engine crashed repeatedly: {play_error}")
+                
+                # Try to recover on next call by recreating engine
                 return self._use_fallback(board, game_obj, player, depth, f"Engine crashed: {play_error}")
             
             if result and result.move:
@@ -336,22 +424,48 @@ class StockfishEngine:
                 BrokenPipeError,
                 OSError,
                 subprocess.SubprocessError) as e:
+            error_msg = str(e)
             print(f"[ERROR] Stockfish engine process error: {e}")
+            
+            # Check for specific crash indicators
+            is_crash = any(indicator in error_msg.lower() for indicator in [
+                "exit code", "process died", "unexpectedly", "segmentation",
+                "sigsegv", "engine process died", "-11"
+            ])
+            
+            if is_crash:
+                print(f"[ERROR] Stockfish crash detected: {error_msg}")
+            
             # Reset engine if it's dead
             print("[WARNING] Stockfish engine connection died, resetting engine")
             self._reset_engine()
+            self.crash_count += 1
+            
             # Fallback to PhaseBasedEngine on any error
-            return self._use_fallback(board, game_obj, player, depth, f"Error: {str(e)}")
+            if self.crash_count >= 3:
+                return self._use_fallback(board, game_obj, player, depth, f"Engine crashed repeatedly: {error_msg}")
+            return self._use_fallback(board, game_obj, player, depth, f"Error: {error_msg}")
         except Exception as e:
+            error_msg = str(e)
             print(f"[ERROR] Stockfish unexpected error: {e}")
             import traceback
             traceback.print_exc()
+            
             # Reset engine if it's dead (e.g., "engine event loop dead", "exit code")
-            if any(keyword in str(e).lower() for keyword in ["dead", "event loop", "exit code", "process died"]):
+            is_crash = any(keyword in error_msg.lower() for keyword in [
+                "dead", "event loop", "exit code", "process died", 
+                "unexpectedly", "segmentation", "sigsegv", "-11"
+            ])
+            
+            if is_crash:
                 print("[WARNING] Stockfish engine connection died, resetting engine")
                 self._reset_engine()
+                self.crash_count += 1
+            
             # Fallback to PhaseBasedEngine on any error
-            return self._use_fallback(board, game_obj, player, depth, f"Error: {str(e)}")
+            if self.crash_count >= 3:
+                return self._use_fallback(board, game_obj, player, depth, f"Engine crashed repeatedly: {error_msg}")
+            return self._use_fallback(board, game_obj, player, depth, f"Error: {error_msg}")
     
     def choose_piece(self, position):
         """Choose piece for promotion (always queen for Stockfish)."""
