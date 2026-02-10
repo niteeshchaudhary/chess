@@ -4,4 +4,6 @@ to run it :
 - ensure u have tk installed in your system
 - run your code python main.py
 
-**Note : Code may have bugs (Don't forget to raise issues if you find one)**
+# U can Make the bot play on lichess
+- OpenCV helps detecting board and token
+- play 10+5 on lichess and defeat anyone
